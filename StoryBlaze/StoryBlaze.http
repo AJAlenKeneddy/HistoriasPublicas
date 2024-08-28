@@ -1,0 +1,6 @@
+@StoryBlaze_HostAddress = http://localhost:5136
+
+GET {{StoryBlaze_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
