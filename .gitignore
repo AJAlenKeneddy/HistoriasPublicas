@@ -361,3 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+#Archivos Personales
+appsettings.json
+Program.cs
+AccesoController.cs
+/StoryBlaze/Program.cs
+/StoryBlaze/appsettings.json
+/StoryBlaze/Controllers/AccesoController.cs
