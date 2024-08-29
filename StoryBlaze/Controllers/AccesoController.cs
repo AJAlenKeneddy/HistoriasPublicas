@@ -10,6 +10,12 @@ using Microsoft.Data.SqlClient;
 namespace StoryBlaze.Controllers
 {
 
+
+
+    /* 
+     Configuracion del Enpoint y llamado de Contexto de la BD ademas 
+     de Utilidades y el Servicio de Envio de Correo
+    */
     [Route("api/[controller]")]
     [ApiController]
     public class AccesoController : ControllerBase
@@ -28,25 +34,27 @@ namespace StoryBlaze.Controllers
 
 
 
-
+        /*
+         Endpoint para Registrar Usuarios ademas de generacion de un codigo de Verificacion de 
+         5 digitos y su envio a su respectivo correo el cual hace uso de Utilidades de Hash Contraseña y EmailService 
+        */
         [HttpPost]
         [Route("Registrarse")]
         public async Task<IActionResult> Registrarse([FromBody] RegistrarseRequest request)
         {
             if (request == null || string.IsNullOrEmpty(request.Nombre) || string.IsNullOrEmpty(request.Correo) || string.IsNullOrEmpty(request.Clave))
                 return BadRequest(new RegistrarseResponse { IsSuccess = false, Message = "Todos los campos son requeridos." });
-            
 
             try
             {
-                var codigoVerificacion = new Random().Next(10000, 99999).ToString(); 
+                var codigoVerificacion = new Random().Next(10000, 99999).ToString();
                 var modeloUsuario = new Usuario
                 {
                     NombreUsuario = request.Nombre,
                     Correo = request.Correo,
                     ContraseñaHash = util.encriptarSHA256(request.Clave),
                     CodigoVerificacion = codigoVerificacion,
-                    FechaExpiracionCodigo = DateTime.Now.AddHours(24),
+                    FechaExpiracionCodigo = DateTime.Now.AddHours(1),
                     Verificado = false
                 };
 
@@ -62,7 +70,7 @@ namespace StoryBlaze.Controllers
                 <strong>{codigoVerificacion}</strong></p>
             </body>
             </html>
-        ";
+                ";
 
                 var emailSent = await emailService.SendEmailAsync(
                     "Remitente",
@@ -73,31 +81,24 @@ namespace StoryBlaze.Controllers
                     emailBody);
 
                 if (emailSent)
-                    return Ok(new RegistrarseResponse { IsSuccess = true, Message = "Registro exitoso. Verifica tu correo electrónico." });                
-                else                          
+                    return Ok(new RegistrarseResponse { IsSuccess = true, Message = "Registro exitoso. Verifica tu correo electrónico." });
+                else
                     return StatusCode(StatusCodes.Status500InternalServerError, new RegistrarseResponse { IsSuccess = false, Message = "Error al enviar el correo. Inténtalo de nuevo." });
-                
+
             }
             catch (DbUpdateException dbEx)
             {
                 var sqlException = dbEx.InnerException as SqlException;
                 if (sqlException != null)
-                {
-                    if (sqlException.Number == 2627) // Violación de clave única
-                    {
+                    if (sqlException.Number == 2627)
                         if (sqlException.Message.Contains("UQ__Usuarios__60695A1984046E71"))
-                        {
                             return StatusCode(StatusCodes.Status409Conflict, new
                             {
                                 IsSuccess = false,
                                 Message = "El correo electrónico ya está en uso.",
                                 Details = sqlException.Message
                             });
-                        }
-                    }
-                }
 
-                // Manejo de otros errores de actualización de base de datos
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     IsSuccess = false,
@@ -107,7 +108,6 @@ namespace StoryBlaze.Controllers
             }
             catch (Exception ex)
             {
-                // Manejo de otros errores
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     IsSuccess = false,
@@ -115,10 +115,13 @@ namespace StoryBlaze.Controllers
                     Details = ex.Message
                 });
             }
+            
         }
 
         
-
+        /*
+         Endpoint para poder Iniciar Session con utilidad de DesHash de Contraseña     
+         */
         [HttpPost]
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
@@ -135,52 +138,54 @@ namespace StoryBlaze.Controllers
                     .FirstOrDefaultAsync();
 
                 if (usuarioEncontrado == null)
-                {
                     return Unauthorized(new LoginResponse { IsSuccess = false, Message = "Credenciales inválidas." });
-                }
-
-                // Generar JWT token
-                var token = util.generarJWT(usuarioEncontrado);
-
-                // Preparar el cuerpo del correo con el token
-                var emailBody = $@"
-                     <html>
-                     <body>
-                    <h2>Token de Inicio de Sesión</h2>
-                    <p>Tu token JWT es:
-                    <br>
-                    <strong>{token}</strong></p>
-                    </body>
-                    </html>
-                     ";
-
-                var emailSent = await emailService.SendEmailAsync(
-                    "Remitente",
-                    "alenaguilar24@gmail.com",
-                    "Destinatario",
-                    loginRequest.Correo,
-                    "Token de Inicio de Sesión",
-                    emailBody);
-
-                if (emailSent)
-                {
-                    return Ok(new LoginResponse { IsSuccess = true, Token = token, Message = "Envío exitoso. Verifica tu correo electrónico." });
-                }
                 else
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse { IsSuccess = false, Message = "Error al enviar el correo. Inténtalo de nuevo." });
-                }
+                    return Ok(new LoginResponse { IsSuccess = true, Message = "Inicio de sesión exitoso." });
+
+                /*
+                 Omision de Codigo para futura implementacion
+                 */
+
+                //var token = util.generarJWT(usuarioEncontrado);
+                //var emailBody = $@"
+                //     <html>
+                //     <body>
+                //    <h2>Token de Inicio de Sesión</h2>
+                //    <p>Tu token JWT es:
+                //    <br>
+                //    <strong>{token}</strong></p>
+                //    </body>
+                //    </html>
+                //     ";
+
+                //var emailSent = await emailService.SendEmailAsync(
+                //    "Remitente",
+                //    "alenaguilar24@gmail.com",
+                //    "Destinatario",
+                //    loginRequest.Correo,
+                //    "Token de Inicio de Sesión",
+                //    emailBody);
+
+                //if (emailSent)
+                //{
+                //    return Ok(new LoginResponse { IsSuccess = true, Token = token, Message = "Envío exitoso. Verifica tu correo electrónico." });
+                //}
+                //else
+                //{
+                //    return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse { IsSuccess = false, Message = "Error al enviar el correo. Inténtalo de nuevo." });
+                //}
             }
             catch (Exception ex)
             {
-                
-
                 return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse { IsSuccess = false, Message = "Error interno del servidor." });
             }
         }
 
         
-
+        /*
+         Endpoint Para Verificar Cuenta Mediante el Correo Especificado ademas 
+         del Codigo que se envio al Correo
+         */
         [HttpPost]
         [Route("VerificarCuenta")]
         public async Task<IActionResult> VerificarCuenta([FromBody] VerificarCuentaRequest request)
@@ -227,6 +232,10 @@ namespace StoryBlaze.Controllers
             }
         }
 
+
+        /*
+         Endpoint para Solicitar un Nuevo codigo de Verificacion que se envia al Correo Correspondiente
+         */
         [HttpPost]
         [Route("ActualizarCodigoVerificacion")]
         public async Task<IActionResult> ActualizarCodigoVerificacion([FromBody] SolicitarNuevoCodigoRequest request)
@@ -257,7 +266,8 @@ namespace StoryBlaze.Controllers
                 
                 var nuevoCodigo = new Random().Next(10000, 99999).ToString();
                 usuarioExistente.CodigoVerificacion = nuevoCodigo;
-                usuarioExistente.FechaExpiracionCodigo = DateTime.Now.AddHours(24);
+                usuarioExistente.FechaExpiracionCodigo = DateTime.Now.AddHours(1);
+
 
                 
                 db.Usuarios.Update(usuarioExistente);
