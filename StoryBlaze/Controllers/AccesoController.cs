@@ -83,7 +83,7 @@ namespace StoryBlaze.Controllers
                 var sqlException = dbEx.InnerException as SqlException;
                 if (sqlException != null)
                 {
-                    if (sqlException.Number == 2627) // Violación de clave única
+                    if (sqlException.Number == 2627) 
                     {
                         if (sqlException.Message.Contains("UQ__Usuarios__60695A1984046E71"))
                         {
@@ -97,7 +97,7 @@ namespace StoryBlaze.Controllers
                     }
                 }
 
-                // Manejo de otros errores de actualización de base de datos
+                
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     IsSuccess = false,
@@ -107,7 +107,7 @@ namespace StoryBlaze.Controllers
             }
             catch (Exception ex)
             {
-                // Manejo de otros errores
+                
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     IsSuccess = false,
@@ -139,10 +139,10 @@ namespace StoryBlaze.Controllers
                     return Unauthorized(new LoginResponse { IsSuccess = false, Message = "Credenciales inválidas." });
                 }
 
-                // Generar JWT token
+                
                 var token = util.generarJWT(usuarioEncontrado);
 
-                // Preparar el cuerpo del correo con el token
+                
                 var emailBody = $@"
                      <html>
                      <body>
@@ -174,6 +174,7 @@ namespace StoryBlaze.Controllers
             catch (Exception ex)
             {
                 
+
 
                 return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse { IsSuccess = false, Message = "Error interno del servidor." });
             }
@@ -258,6 +259,7 @@ namespace StoryBlaze.Controllers
                 var nuevoCodigo = new Random().Next(10000, 99999).ToString();
                 usuarioExistente.CodigoVerificacion = nuevoCodigo;
                 usuarioExistente.FechaExpiracionCodigo = DateTime.Now.AddHours(24);
+
 
                 
                 db.Usuarios.Update(usuarioExistente);
