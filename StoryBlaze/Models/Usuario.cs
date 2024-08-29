@@ -21,6 +21,10 @@ public partial class Usuario
 
     public bool Verificado { get; set; }
 
+    public string? CodigoRecuperacion { get; set; }
+
+    public DateTime? FechaExpiracionCodigoRecuperacion { get; set; }
+
     public virtual ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
 
     public virtual ICollection<Fragmento> Fragmentos { get; set; } = new List<Fragmento>();

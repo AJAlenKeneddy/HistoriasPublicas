@@ -6,6 +6,8 @@ using WEBAPIGMINGENIEROSHTTPS.Custom;
 using WEBAPIGMINGENIEROSHTTPS.Models.Services;
 
 using Microsoft.Data.SqlClient;
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Claims;
 
 namespace StoryBlaze.Controllers
 {
@@ -42,12 +44,27 @@ namespace StoryBlaze.Controllers
         [Route("Registrarse")]
         public async Task<IActionResult> Registrarse([FromBody] RegistrarseRequest request)
         {
+            // Validación de campos requeridos
             if (request == null || string.IsNullOrEmpty(request.Nombre) || string.IsNullOrEmpty(request.Correo) || string.IsNullOrEmpty(request.Clave))
                 return BadRequest(new RegistrarseResponse { IsSuccess = false, Message = "Todos los campos son requeridos." });
 
             try
             {
+                // Validar si el correo ya está en uso antes de insertar
+                var usuarioExistente = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == request.Correo);
+                if (usuarioExistente != null)
+                {
+                    return StatusCode(StatusCodes.Status409Conflict, new
+                    {
+                        IsSuccess = false,
+                        Message = "El correo electrónico ya está en uso."
+                    });
+                }
+
+                // Generación del código de verificación
                 var codigoVerificacion = new Random().Next(10000, 99999).ToString();
+
+                // Crear el modelo de usuario
                 var modeloUsuario = new Usuario
                 {
                     NombreUsuario = request.Nombre,
@@ -58,19 +75,20 @@ namespace StoryBlaze.Controllers
                     Verificado = false
                 };
 
+                // Intentar guardar el nuevo usuario
                 await db.Usuarios.AddAsync(modeloUsuario);
                 await db.SaveChangesAsync();
 
+                // Enviar correo electrónico con el código de verificación
                 var emailBody = $@"
-            <html>
-            <body>
-                <h2>Verificación de Correo</h2>
-                <p>Tu código de verificación es:
-                <br>
-                <strong>{codigoVerificacion}</strong></p>
-            </body>
-            </html>
-                ";
+        <html>
+        <body>
+            <h2>Verificación de Correo</h2>
+            <p>Tu código de verificación es:
+            <br>
+            <strong>{codigoVerificacion}</strong></p>
+        </body>
+        </html>";
 
                 var emailSent = await emailService.SendEmailAsync(
                     "Remitente",
@@ -80,30 +98,15 @@ namespace StoryBlaze.Controllers
                     "Código de Verificación",
                     emailBody);
 
+                // Verificar si el correo fue enviado con éxito
                 if (emailSent)
                     return Ok(new RegistrarseResponse { IsSuccess = true, Message = "Registro exitoso. Verifica tu correo electrónico." });
                 else
                     return StatusCode(StatusCodes.Status500InternalServerError, new RegistrarseResponse { IsSuccess = false, Message = "Error al enviar el correo. Inténtalo de nuevo." });
-
             }
             catch (DbUpdateException dbEx)
             {
-                var sqlException = dbEx.InnerException as SqlException;
-                if (sqlException != null)
-
-
-                    if (sqlException.Number == 2627)
-                    {
-
-                        if (sqlException.Message.Contains("UQ__Usuarios__60695A1984046E71"))
-                            return StatusCode(StatusCodes.Status409Conflict, new
-                            {
-                                IsSuccess = false,
-                                Message = "El correo electrónico ya está en uso.",
-                                Details = sqlException.Message
-                            });
-                    }
-
+                // Manejo de errores de base de datos
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     IsSuccess = false,
@@ -113,7 +116,7 @@ namespace StoryBlaze.Controllers
             }
             catch (Exception ex)
             {
-
+                // Manejo de cualquier otra excepción
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     IsSuccess = false,
@@ -121,10 +124,10 @@ namespace StoryBlaze.Controllers
                     Details = ex.Message
                 });
             }
-            
         }
 
-        
+
+
         /*
          Endpoint para poder Iniciar Session con utilidad de DesHash de Contraseña     
          */
@@ -135,7 +138,6 @@ namespace StoryBlaze.Controllers
             if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Correo) || string.IsNullOrEmpty(loginRequest.Clave))
                 return BadRequest(new LoginResponse { IsSuccess = false, Message = "Correo y clave son requeridos." });
 
-
             try
             {
                 var claveEncriptada = util.encriptarSHA256(loginRequest.Clave);
@@ -145,58 +147,31 @@ namespace StoryBlaze.Controllers
 
                 if (usuarioEncontrado == null)
                     return Unauthorized(new LoginResponse { IsSuccess = false, Message = "Credenciales inválidas." });
-                else
-                    return Ok(new LoginResponse { IsSuccess = true, Message = "Inicio de sesión exitoso." });
+                else if (!usuarioEncontrado.Verificado)
+                    return Unauthorized(new LoginResponse { IsSuccess = false, Message = "El correo no ha sido verificado. Por favor, verifica tu correo antes de iniciar sesión." });
 
+                var token = util.generarJWT(usuarioEncontrado);
 
-
-
-
-
-                /*
-                 Omision de Codigo para futura implementacion
-                 */
-
-                //var token = util.generarJWT(usuarioEncontrado);
-                //var emailBody = $@"
-                //     <html>
-                //     <body>
-                //    <h2>Token de Inicio de Sesión</h2>
-                //    <p>Tu token JWT es:
-                //    <br>
-                //    <strong>{token}</strong></p>
-                //    </body>
-                //    </html>
-                //     ";
-
-                //var emailSent = await emailService.SendEmailAsync(
-                //    "Remitente",
-                //    "alenaguilar24@gmail.com",
-                //    "Destinatario",
-                //    loginRequest.Correo,
-                //    "Token de Inicio de Sesión",
-                //    emailBody);
-
-                //if (emailSent)
-                //{
-                //    return Ok(new LoginResponse { IsSuccess = true, Token = token, Message = "Envío exitoso. Verifica tu correo electrónico." });
-                //}
-                //else
-                //{
-                //    return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse { IsSuccess = false, Message = "Error al enviar el correo. Inténtalo de nuevo." });
-                //}
+                return Ok(new LoginResponse
+                {
+                    IsSuccess = true,
+                    Token = token,
+                    Message = "Inicio de sesión exitoso."
+                });
             }
             catch (Exception ex)
             {
-                
-
-
-
-                return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse { IsSuccess = false, Message = "Error interno del servidor." });
+                return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse
+                {
+                    IsSuccess = false,
+                    Message = ("Error interno del servidor.")
+                    
+                });
             }
         }
 
-        
+
+
         /*
          Endpoint Para Verificar Cuenta Mediante el Correo Especificado ademas 
          del Codigo que se envio al Correo
@@ -328,6 +303,199 @@ namespace StoryBlaze.Controllers
                 });
             }
         }
+
+
+
+
+        [HttpPost]
+        [Route("SolicitarCambioContrasena")]
+        public async Task<IActionResult> SolicitarCambioContrasena([FromBody] SolicitarCambioContrasenaRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Correo))
+                return BadRequest(new { IsSuccess = false, Message = "El correo es requerido." });
+
+            try
+            {
+                
+                var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == request.Correo);
+                if (usuario == null)
+                    return NotFound(new { IsSuccess = false, Message = "Usuario no encontrado." });
+
+                
+                var codigoRecuperacion = new Random().Next(10000, 99999).ToString();
+                usuario.CodigoRecuperacion = codigoRecuperacion;
+                usuario.FechaExpiracionCodigoRecuperacion = DateTime.Now.AddHours(1); 
+
+                
+                db.Usuarios.Update(usuario);
+                await db.SaveChangesAsync();
+
+                
+                var enlaceRecuperacion = Url.Action("RecuperarContrasena", "Acceso", new { codigo = codigoRecuperacion, correo = request.Correo }, Request.Scheme);
+                var emailBody = $@"
+                                <html>
+                                <body>
+                                    <h2>Recuperación de Contraseña</h2>
+                                    <p>Para restablecer tu contraseña, haz clic en el siguiente botón:</p>
+                                    <a href='{enlaceRecuperacion}' style='background-color: #4CAF50; color: white; padding: 15px 20px; text-align: center; text-decoration: none; display: inline-block; margin: 4px 2px; cursor: pointer;'>Restablecer Contraseña</a>
+                                </body>
+                                </html>";
+
+                var emailSent = await emailService.SendEmailAsync(
+                    "Remitente",
+                    "alenaguilar24@gmail.com",
+                    "Destinatario",
+                    request.Correo,
+                    "Solicitud de Cambio de Contraseña",
+                    emailBody);
+
+                if (emailSent)
+                    return Ok(new { IsSuccess = true, Message = "Se ha enviado un enlace para restablecer la contraseña a tu correo." });
+                else
+                    return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error al enviar el correo. Inténtalo de nuevo." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    IsSuccess = false,
+                    Message = "Error interno del servidor.",
+                    Details = ex.Message
+                });
+            }
+        }
+
+
+        [HttpGet]
+        [Route("RecuperarContrasena")]
+        public async Task<IActionResult> RecuperarContrasena([FromQuery] string codigo, [FromQuery] string correo)
+        {
+            if (string.IsNullOrEmpty(codigo) || string.IsNullOrEmpty(correo))
+                return BadRequest(new { IsSuccess = false, Message = "Código y correo son requeridos." });
+
+            try
+            {
+                var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == correo);
+                if (usuario == null)
+                    return NotFound(new { IsSuccess = false, Message = "Usuario no encontrado." });
+
+                if (usuario.CodigoRecuperacion != codigo)
+                    return BadRequest(new { IsSuccess = false, Message = "Código de recuperación incorrecto." });
+
+                if (usuario.FechaExpiracionCodigoRecuperacion < DateTime.Now)
+                    return BadRequest(new { IsSuccess = false, Message = "El código de recuperación ha expirado." });
+
+                // Aquí podrías redirigir al usuario a una página para ingresar la nueva contraseña
+                // En una API, podrías simplemente enviar un mensaje indicando que el enlace es válido
+
+                return Ok(new { IsSuccess = true, Message = "Código de recuperación válido. Por favor, proporciona una nueva contraseña." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    IsSuccess = false,
+                    Message = "Error interno del servidor.",
+                    Details = ex.Message
+                });
+            }
+        }
+
+
+        [HttpPost]
+        [Route("EstablecerNuevaContrasena")]
+        public async Task<IActionResult> EstablecerNuevaContrasena([FromBody] EstablecerNuevaContrasenaRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Correo) || string.IsNullOrEmpty(request.CodigoRecuperacion) || string.IsNullOrEmpty(request.NuevaContrasena))
+                return BadRequest(new { IsSuccess = false, Message = "Correo, código de recuperación y nueva contraseña son requeridos." });
+
+            try
+            {
+                var usuario = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo == request.Correo);
+                if (usuario == null)
+                    return NotFound(new { IsSuccess = false, Message = "Usuario no encontrado." });
+
+                if (usuario.CodigoRecuperacion != request.CodigoRecuperacion)
+                    return BadRequest(new { IsSuccess = false, Message = "Código de recuperación incorrecto." });
+
+                if (usuario.FechaExpiracionCodigoRecuperacion < DateTime.Now)
+                    return BadRequest(new { IsSuccess = false, Message = "El código de recuperación ha expirado." });
+
+                // Establecer la nueva contraseña
+                usuario.ContraseñaHash = util.encriptarSHA256(request.NuevaContrasena);
+                usuario.CodigoRecuperacion = null;
+                usuario.FechaExpiracionCodigoRecuperacion = null;
+
+                db.Usuarios.Update(usuario);
+                await db.SaveChangesAsync();
+
+                return Ok(new { IsSuccess = true, Message = "Contraseña actualizada exitosamente." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    IsSuccess = false,
+                    Message = "Error interno del servidor.",
+                    Details = ex.Message
+                });
+            }
+        }
+
+
+
+        [HttpGet]
+        [Route("ObtenerInformacion")]
+        public async Task<IActionResult> ObtenerInformacion()
+        {
+            // Se asume que el usuario está autenticado y el token JWT ha sido validado para obtener el correo.
+            var correoUsuario = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (string.IsNullOrEmpty(correoUsuario))
+                return Unauthorized(new { IsSuccess = false, Message = "Usuario no autenticado." });
+
+            try
+            {
+                var usuario = await db.Usuarios
+                    .Where(u => u.Correo == correoUsuario)
+                    .FirstOrDefaultAsync();
+
+                if (usuario == null)
+                    return NotFound(new { IsSuccess = false, Message = "Usuario no encontrado." });
+
+                return Ok(new
+                {
+                    IsSuccess = true,
+                    Usuario = new
+                    {
+                        Nombre = usuario.NombreUsuario,
+                        Correo = usuario.Correo,
+                        Verificado = usuario.Verificado
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    IsSuccess = false,
+                    Message = "Error interno del servidor.",
+                    Details = ex.Message
+                });
+            }
+        }
+
+
+        [HttpPost]
+        [Route("CerrarSesion")]
+        public IActionResult CerrarSesion()
+        {
+            // Aquí puedes implementar lógica para invalidar el token JWT, si estás usando uno.
+            return Ok(new { IsSuccess = true, Message = "Sesión cerrada exitosamente." });
+        }
+
+
+
+
 
 
 

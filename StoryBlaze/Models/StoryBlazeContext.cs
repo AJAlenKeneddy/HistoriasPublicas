@@ -25,7 +25,7 @@ public partial class StoryBlazeContext : DbContext
 
     public virtual DbSet<Voto> Votos { get; set; }
 
-   
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Comentario>(entity =>
@@ -98,10 +98,12 @@ public partial class StoryBlazeContext : DbContext
             entity.HasIndex(e => e.Correo, "UQ__Usuarios__60695A1984046E71").IsUnique();
 
             entity.Property(e => e.UsuarioId).HasColumnName("UsuarioID");
+            entity.Property(e => e.CodigoRecuperacion).HasMaxLength(6);
             entity.Property(e => e.CodigoVerificacion).HasMaxLength(6);
             entity.Property(e => e.ContraseñaHash).HasMaxLength(256);
             entity.Property(e => e.Correo).HasMaxLength(100);
             entity.Property(e => e.FechaExpiracionCodigo).HasColumnType("datetime");
+            entity.Property(e => e.FechaExpiracionCodigoRecuperacion).HasColumnType("datetime");
             entity.Property(e => e.FechaRegistro)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
