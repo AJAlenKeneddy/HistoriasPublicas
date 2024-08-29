@@ -90,7 +90,11 @@ namespace StoryBlaze.Controllers
             {
                 var sqlException = dbEx.InnerException as SqlException;
                 if (sqlException != null)
+
+
                     if (sqlException.Number == 2627)
+                    {
+
                         if (sqlException.Message.Contains("UQ__Usuarios__60695A1984046E71"))
                             return StatusCode(StatusCodes.Status409Conflict, new
                             {
@@ -98,6 +102,7 @@ namespace StoryBlaze.Controllers
                                 Message = "El correo electrónico ya está en uso.",
                                 Details = sqlException.Message
                             });
+                    }
 
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
@@ -108,6 +113,7 @@ namespace StoryBlaze.Controllers
             }
             catch (Exception ex)
             {
+
                 return StatusCode(StatusCodes.Status500InternalServerError, new
                 {
                     IsSuccess = false,
@@ -141,6 +147,11 @@ namespace StoryBlaze.Controllers
                     return Unauthorized(new LoginResponse { IsSuccess = false, Message = "Credenciales inválidas." });
                 else
                     return Ok(new LoginResponse { IsSuccess = true, Message = "Inicio de sesión exitoso." });
+
+
+
+
+
 
                 /*
                  Omision de Codigo para futura implementacion
@@ -177,6 +188,10 @@ namespace StoryBlaze.Controllers
             }
             catch (Exception ex)
             {
+                
+
+
+
                 return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse { IsSuccess = false, Message = "Error interno del servidor." });
             }
         }
@@ -267,6 +282,7 @@ namespace StoryBlaze.Controllers
                 var nuevoCodigo = new Random().Next(10000, 99999).ToString();
                 usuarioExistente.CodigoVerificacion = nuevoCodigo;
                 usuarioExistente.FechaExpiracionCodigo = DateTime.Now.AddHours(1);
+
 
 
                 
