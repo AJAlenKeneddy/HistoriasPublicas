@@ -25,7 +25,10 @@ public partial class StoryBlazeContext : DbContext
 
     public virtual DbSet<Voto> Votos { get; set; }
 
-    
+   public virtual DbSet<sp_ListarHistorias>HistoriaConUsuarios { get; set; }
+
+    public virtual DbSet<sp_ListarFragmentosPorHistoria>Sp_ListarFragmentosPorHistorias { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Comentario>(entity =>
@@ -56,9 +59,6 @@ public partial class StoryBlazeContext : DbContext
             entity.HasKey(e => e.FragmentoId).HasName("PK__Fragment__EF4795BBE3F22DC2");
 
             entity.Property(e => e.FragmentoId).HasColumnName("FragmentoID");
-            entity.Property(e => e.FechaCreacion)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
             entity.Property(e => e.HistoriaId).HasColumnName("HistoriaID");
             entity.Property(e => e.UsuarioId).HasColumnName("UsuarioID");
 
@@ -79,9 +79,6 @@ public partial class StoryBlazeContext : DbContext
             entity.Property(e => e.Estado)
                 .HasMaxLength(50)
                 .HasDefaultValue("En Curso");
-            entity.Property(e => e.FechaCreacion)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
             entity.Property(e => e.Resumen).HasMaxLength(1000);
             entity.Property(e => e.Titulo).HasMaxLength(200);
             entity.Property(e => e.UsuarioCreadorId).HasColumnName("UsuarioCreadorID");

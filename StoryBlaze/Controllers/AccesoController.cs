@@ -306,7 +306,9 @@ namespace StoryBlaze.Controllers
 
 
 
-
+        /*
+         Endpoint que realiza el envio de un Correo para poder cambiar la contraseña del usuario en Especifico
+         */
         [HttpPost]
         [Route("SolicitarCambioContrasena")]
         public async Task<IActionResult> SolicitarCambioContrasena([FromBody] SolicitarCambioContrasenaRequest request)
