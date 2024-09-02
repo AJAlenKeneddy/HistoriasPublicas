@@ -13,7 +13,7 @@ public partial class Comentario
 
     public string? Comentario1 { get; set; }
 
-    public DateTime? FechaComentario { get; set; }  
+    public DateTime? FechaComentario { get; set; }
 
     public virtual Fragmento? Fragmento { get; set; }
 

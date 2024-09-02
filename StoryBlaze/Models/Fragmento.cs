@@ -13,7 +13,7 @@ public partial class Fragmento
 
     public string Contenido { get; set; } = null!;
 
-    public DateTime? FechaCreacionFrag { get; set; }
+    public DateOnly? FechaCreacionFrag { get; set; }
 
     public virtual ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
 

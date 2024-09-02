@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace StoryBlaze.Models;
 
@@ -25,9 +26,9 @@ public partial class StoryBlazeContext : DbContext
 
     public virtual DbSet<Voto> Votos { get; set; }
 
-   public virtual DbSet<sp_ListarHistorias>HistoriaConUsuarios { get; set; }
+    public virtual DbSet<sp_ListarFragmentosPorHistoria>Sp_ListarFragmentosPorHistorias {  get; set; }
 
-    public virtual DbSet<sp_ListarFragmentosPorHistoria>Sp_ListarFragmentosPorHistorias { get; set; }
+    public virtual DbSet<sp_ListarHistorias>Sp_ListarHistorias { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

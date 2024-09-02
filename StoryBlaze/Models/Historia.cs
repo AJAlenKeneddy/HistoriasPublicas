@@ -13,9 +13,11 @@ public partial class Historia
 
     public int? UsuarioCreadorId { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public DateOnly? FechaCreacion { get; set; }
 
     public string? Estado { get; set; }
+
+    public bool Eliminado { get; set; }
 
     public virtual ICollection<Fragmento> Fragmentos { get; set; } = new List<Fragmento>();
 
