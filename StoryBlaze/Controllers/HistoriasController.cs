@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -10,44 +14,22 @@ namespace StoryBlaze.Controllers
     [ApiController]
     public class HistoriasController : ControllerBase
     {
-        private readonly StoryBlazeContext db;
+        private readonly StoryBlazeContext _context;
 
-        public HistoriasController(StoryBlazeContext db)
+        public HistoriasController(StoryBlazeContext context)
         {
-            this.db = db;
+            _context = context;
         }
-
-        [HttpPost]
-        [Route("AgregarHistoria")]
-        public async Task<IActionResult> AgregarHistoria([FromBody] Historia nuevaHistoria)
-        {
-            try
-            {
-                if (nuevaHistoria == null)
-                    return BadRequest(new { IsSuccess = false, Message = "Datos inválidos." });
-
-                db.Historias.Add(nuevaHistoria);
-                await db.SaveChangesAsync();
-
-                return Ok(new { IsSuccess = true, Message = "Historia agregada exitosamente." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error al agregar la historia", Details = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        [Route("ListarHistorias")]
+        [HttpGet("ListarHistorias")]
         public async Task<IActionResult> ListarHistorias()
         {
             try
             {
-                var historias = await db.Historias
+                var historias = await _context.Historias
                     .Where(h => !h.Eliminado)
                     .ToListAsync();
 
-                if (historias == null || !historias.Any())
+                if (!historias.Any())
                     return NotFound(new { IsSuccess = false, Message = "No se encontraron historias." });
 
                 return Ok(new { IsSuccess = true, Data = historias });
@@ -57,14 +39,12 @@ namespace StoryBlaze.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error interno del servidor.", Details = ex.Message });
             }
         }
-
-        [HttpGet]
-        [Route("ObtenerHistoria/{id}")]
+        [HttpGet("ObtenerHistoria/{id}")]
         public async Task<IActionResult> ObtenerHistoria(int id)
         {
             try
             {
-                var historia = await db.Historias
+                var historia = await _context.Historias
                     .Where(h => h.HistoriaId == id && !h.Eliminado)
                     .FirstOrDefaultAsync();
 
@@ -79,44 +59,73 @@ namespace StoryBlaze.Controllers
             }
         }
 
-        [HttpPut]
-        [Route("ActualizarHistoria/{id}")]
-        public async Task<IActionResult> ActualizarHistoria(int id, [FromBody] Historia historiaActualizada)
+       
+
+        [HttpPost("AgregarHistoria")]
+        public async Task<IActionResult> AgregarHistoria([FromBody] Historia nuevaHistoria)
         {
+            if (nuevaHistoria == null)
+                return BadRequest(new { IsSuccess = false, Message = "Datos inválidos." });
+
             try
             {
-                var historiaExistente = await db.Historias.FindAsync(id);
+                _context.Historias.Add(nuevaHistoria);
+                await _context.SaveChangesAsync();
+                return Ok(new { IsSuccess = true, Message = "Historia agregada exitosamente." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error al agregar la historia", Details = ex.Message });
+            }
+        }
+
+        
+
+        
+
+        [HttpPut("ActualizarHistoria/{id}")]
+        public async Task<IActionResult> ActualizarHistoria(int id, [FromBody] Historia historiaActualizada)
+        {
+            if (historiaActualizada == null || id != historiaActualizada.HistoriaId)
+                return BadRequest(new { IsSuccess = false, Message = "Datos inválidos." });
+
+            try
+            {
+                var historiaExistente = await _context.Historias.FindAsync(id);
 
                 if (historiaExistente == null || historiaExistente.Eliminado)
-                    return NotFound(new { IsSuccess = false, Message = "No se encontró la historia." });
+                    return NotFound(new { IsSuccess = false, Message = "Historia no encontrada o eliminada." });
 
+                // Actualiza las propiedades necesarias
                 historiaExistente.Titulo = historiaActualizada.Titulo;
                 historiaExistente.Resumen = historiaActualizada.Resumen;
 
-                await db.SaveChangesAsync();
-
+                await _context.SaveChangesAsync();
                 return Ok(new { IsSuccess = true, Message = "Historia actualizada exitosamente." });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error al actualizar la historia.", Details = ex.Message });
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    IsSuccess = false,
+                    Message = "Error al actualizar la historia.",
+                    Details = ex.Message
+                });
             }
         }
 
-        [HttpDelete]
-        [Route("EliminarHistoria/{id}")]
+        [HttpDelete("EliminarHistoria/{id}")]
         public async Task<IActionResult> EliminarHistoria(int id)
         {
             try
             {
-                var historiaExistente = await db.Historias.FindAsync(id);
+                var historiaExistente = await _context.Historias.FindAsync(id);
 
                 if (historiaExistente == null)
                     return NotFound(new { IsSuccess = false, Message = "Historia no encontrada." });
 
                 historiaExistente.Eliminado = true;
-
-                await db.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
                 return Ok(new { IsSuccess = true, Message = "Historia eliminada lógicamente exitosamente." });
             }
@@ -126,30 +135,32 @@ namespace StoryBlaze.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("api/fragmentos/{id}")]
-        public async Task<IActionResult> ObtenerFragmentosPorHistoria(int id)
+        
+
+        [HttpPut("RestaurarHistoria/{id}")]
+        public async Task<IActionResult> RestaurarHistoria(int id)
         {
             try
             {
-                var fragmentos = await db.Sp_ListarFragmentosPorHistorias
-                    .FromSqlRaw("EXEC sp_ListarFragmentosPorHistoria @HistoriaID", new SqlParameter("@HistoriaID", id))
-                    .ToListAsync();
+                var historiaExistente = await _context.Historias
+                    .Where(h => h.HistoriaId == id && h.Eliminado)
+                    .FirstOrDefaultAsync();
 
-                if (fragmentos == null || !fragmentos.Any())
-                    return NotFound(new { IsSuccess = false, Message = "No se encontraron fragmentos para esta historia." });
+                if (historiaExistente == null)
+                    return NotFound(new { IsSuccess = false, Message = "Historia no encontrada o no está eliminada." });
 
-                return Ok(new { IsSuccess = true, Data = fragmentos });
+                historiaExistente.Eliminado = false;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { IsSuccess = true, Message = "Historia restaurada exitosamente." });
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new
-                {
-                    IsSuccess = false,
-                    Message = "Error interno del servidor.",
-                    Details = ex.Message
-                });
+                return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error al restaurar la historia.", Details = ex.Message });
             }
         }
     }
+
+
+
 }

@@ -15,6 +15,8 @@ public partial class Fragmento
 
     public DateOnly? FechaCreacionFrag { get; set; }
 
+    public bool Eliminado { get; set; }
+
     public virtual ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
 
     public virtual Historia? Historia { get; set; }
