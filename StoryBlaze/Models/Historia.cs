@@ -19,6 +19,10 @@ public partial class Historia
 
     public bool Eliminado { get; set; }
 
+    public int? CategoriaId { get; set; }
+
+    public virtual Categoria? Categoria { get; set; }
+
     public virtual ICollection<Fragmento> Fragmentos { get; set; } = new List<Fragmento>();
 
     public virtual Usuario? UsuarioCreador { get; set; }

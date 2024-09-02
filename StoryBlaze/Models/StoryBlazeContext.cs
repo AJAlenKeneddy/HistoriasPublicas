@@ -15,6 +15,8 @@ public partial class StoryBlazeContext : DbContext
     {
     }
 
+    public virtual DbSet<Categoria> Categoria { get; set; }
+
     public virtual DbSet<Comentario> Comentarios { get; set; }
 
     public virtual DbSet<Fragmento> Fragmentos { get; set; }
@@ -24,11 +26,20 @@ public partial class StoryBlazeContext : DbContext
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
     public virtual DbSet<Voto> Votos { get; set; }
-    public virtual DbSet<sp_ListarFragmentosPorHistoria> Sp_ListarFragmentosPorHistorias { get; set; }
-    public virtual DbSet<sp_ListarHistorias> Sp_ListarHistorias { get; set; }
+    public virtual DbSet<sp_ListarFragmentosPorHistoria>Sp_ListarFragmentosPorHistorias { get; set; }
+    public virtual DbSet<sp_ListarHistorias>Sp_ListarHistorias { get; set; }
+    
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Categoria>(entity =>
+        {
+            entity.HasKey(e => e.CategoriaId).HasName("PK__Categori__F353C1E51A638054");
+
+            entity.Property(e => e.Nombre).HasMaxLength(100);
+        });
+
         modelBuilder.Entity<Comentario>(entity =>
         {
             entity.HasKey(e => e.ComentarioId).HasName("PK__Comentar__F1844958C9C7C431");
@@ -80,6 +91,10 @@ public partial class StoryBlazeContext : DbContext
             entity.Property(e => e.Resumen).HasMaxLength(1000);
             entity.Property(e => e.Titulo).HasMaxLength(200);
             entity.Property(e => e.UsuarioCreadorId).HasColumnName("UsuarioCreadorID");
+
+            entity.HasOne(d => d.Categoria).WithMany(p => p.Historia)
+                .HasForeignKey(d => d.CategoriaId)
+                .HasConstraintName("FK_Historia_Categoria");
 
             entity.HasOne(d => d.UsuarioCreador).WithMany(p => p.Historia)
                 .HasForeignKey(d => d.UsuarioCreadorId)
