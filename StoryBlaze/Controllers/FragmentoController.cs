@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -89,6 +91,7 @@ namespace StoryBlaze.Controllers
         // PUT: api/Fragmento/AgregarFragmento/{id}
         // Actualiza un fragmento existente por su ID. Solo los fragmentos no eliminados son actualizables.
         [HttpPut("AgregarFragmento/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> PutFragmento(int id, [FromBody] Fragmento fragmentoActualizado)
         {
             if (id != fragmentoActualizado.FragmentoId)
@@ -126,6 +129,7 @@ namespace StoryBlaze.Controllers
         // POST: api/Fragmento/ActualizarFragmento
         // Agrega un nuevo fragmento a la base de datos.
         [HttpPost("ActualizarFragmento")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> PostFragmento([FromBody] Fragmento nuevoFragmento)
         {
             try
@@ -147,6 +151,7 @@ namespace StoryBlaze.Controllers
         // DELETE: api/Fragmento/{id}
         // Elimina lógicamente un fragmento por su ID, marcándolo como eliminado en lugar de eliminarlo físicamente.
         [HttpDelete("{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> DeleteFragmento(int id)
         {
             try
@@ -173,6 +178,7 @@ namespace StoryBlaze.Controllers
         // PUT: api/Fragmento/RestaurarFragmento/{id}
         // Restaura un fragmento que ha sido eliminado lógicamente, marcándolo como no eliminado.
         [HttpPut("RestaurarFragmento/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> RestaurarFragmento(int id)
         {
             try

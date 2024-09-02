@@ -8,6 +8,8 @@ using WEBAPIGMINGENIEROSHTTPS.Models.Services;
 using Microsoft.Data.SqlClient;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StoryBlaze.Controllers
 {
@@ -447,6 +449,7 @@ namespace StoryBlaze.Controllers
 
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [Route("ObtenerInformacion")]
         public async Task<IActionResult> ObtenerInformacion()
         {
@@ -488,6 +491,7 @@ namespace StoryBlaze.Controllers
 
 
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [Route("CerrarSesion")]
         public IActionResult CerrarSesion()
         {

@@ -15,6 +15,8 @@ public partial class Comentario
 
     public DateTime? FechaComentario { get; set; }
 
+    public bool Eliminado { get; set; }
+
     public virtual Fragmento? Fragmento { get; set; }
 
     public virtual Usuario? Usuario { get; set; }

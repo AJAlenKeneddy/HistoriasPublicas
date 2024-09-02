@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -11,6 +13,7 @@ using StoryBlaze.Models;
 namespace StoryBlaze.Controllers
 {
     [Route("api/[controller]")]
+    
     [ApiController]
     public class HistoriasController : ControllerBase
     {
@@ -62,6 +65,7 @@ namespace StoryBlaze.Controllers
        
 
         [HttpPost("AgregarHistoria")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> AgregarHistoria([FromBody] Historia nuevaHistoria)
         {
             if (nuevaHistoria == null)
@@ -84,6 +88,7 @@ namespace StoryBlaze.Controllers
         
 
         [HttpPut("ActualizarHistoria/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> ActualizarHistoria(int id, [FromBody] Historia historiaActualizada)
         {
             if (historiaActualizada == null || id != historiaActualizada.HistoriaId)
@@ -115,6 +120,7 @@ namespace StoryBlaze.Controllers
         }
 
         [HttpDelete("EliminarHistoria/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> EliminarHistoria(int id)
         {
             try
@@ -138,6 +144,7 @@ namespace StoryBlaze.Controllers
         
 
         [HttpPut("RestaurarHistoria/{id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> RestaurarHistoria(int id)
         {
             try

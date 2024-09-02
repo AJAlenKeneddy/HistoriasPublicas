@@ -30,27 +30,30 @@ namespace WEBAPIGMINGENIEROSHTTPS.Custom
 
             }
         }
-        public string generarJWT(Usuario modelo)
+        public string generarJWT(Usuario usuario)
         {
-
-            var userClaims = new[]
+            var claims = new[]
             {
-            new Claim(ClaimTypes.NameIdentifier, modelo.UsuarioId.ToString()),
-            new Claim(ClaimTypes.Email, modelo.Correo!)
+        new Claim(JwtRegisteredClaimNames.Sub, usuario.NombreUsuario),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        // Agrega otros claims si es necesario
     };
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:key"]!));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256Signature);
 
-            var jwtConfig = new JwtSecurityToken(
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-                claims: userClaims,
-                expires: DateTime.UtcNow.AddMinutes(90),
-                signingCredentials: credentials
-                );
-            return new JwtSecurityTokenHandler().WriteToken(jwtConfig);
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        
+
+
 
     }
 }
