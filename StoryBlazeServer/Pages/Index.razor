@@ -1,0 +1,21 @@
+﻿@using StoryBlazeServer.Models
+@using StoryBlazeServer.Components;
+@page "/"
+@inject HistoriaService HistoriaService
+
+<PageTitle>Home</PageTitle>
+
+<WelcomeBanner />
+
+<h3>Historias</h3>
+
+<HistoriaTable Historias="historias"  />
+
+@code {
+    private List<Historia>? historias;
+
+    protected override async Task OnInitializedAsync()
+    {
+        historias = await HistoriaService.GetHistoriasAsync();
+    }
+}

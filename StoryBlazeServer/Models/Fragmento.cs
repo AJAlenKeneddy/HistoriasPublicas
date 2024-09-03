@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace StoryBlaze.Models;
+namespace StoryBlazeServer.Models;
 
 public partial class Fragmento
 {

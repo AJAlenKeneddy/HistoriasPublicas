@@ -1,0 +1,55 @@
+﻿@page "/historias"
+@inject HttpClient Http
+
+<h3>Lista de Historias</h3>
+
+@if (historias == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Resumen</th>
+                <th>Fecha de Creación</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var historia in historias)
+            {
+                <tr>
+                    <td>@historia.Titulo</td>
+                    <td>@historia.Resumen</td>
+                    <td>@historia.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                    <td>@historia.Estado</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Historia> historias;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Llamada al endpoint
+            var response = await Http.GetFromJsonAsync<HistoriaResponse>("https://localhost:7107/api/Historias/ListarHistorias");
+
+            if (response.IsSuccess)
+            {
+                historias = response.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener las historias: {ex.Message}");
+        }
+    }
+}

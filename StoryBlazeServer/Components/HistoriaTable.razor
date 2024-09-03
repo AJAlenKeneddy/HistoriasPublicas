@@ -1,0 +1,43 @@
+﻿@using StoryBlazeServer.Models
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Resumen</th>
+            <th>Fecha de Creación</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Historias == null)
+        {
+            <tr>
+                <td colspan="4">Cargando...</td>
+            </tr>
+        }
+        else if (Historias.Count == 0)
+        {
+            <tr>
+                <td colspan="4">No se encontraron historias.</td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var historia in Historias)
+            {
+                <tr>
+                    <td>@historia.Titulo</td>
+                    <td>@historia.Resumen</td>
+                    <td>@(historia.FechaCreacion?.ToShortDateString() ?? "No disponible")</td>
+                    <td>@historia.Estado</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public List<Historia>? Historias { get; set; }
+}
