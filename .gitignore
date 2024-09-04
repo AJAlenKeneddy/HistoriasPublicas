@@ -365,3 +365,5 @@ FodyWeavers.xsd
 /StoryBlaze/Program.cs
 /StoryBlaze/appsettings.json
 /StoryBlaze/Controllers/AccesoController.cs
+/StoryBlazeServer/appsettings.json
+/StoryBlazeServer/Program.cs
