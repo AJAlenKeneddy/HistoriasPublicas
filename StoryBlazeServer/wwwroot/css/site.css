@@ -165,3 +165,36 @@ a, .btn-link {
         opacity: 1;
     }
 }
+.home-container {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.historias-section {
+    flex: 2;
+    min-width: 300px; /* Ancho mínimo para que no se haga demasiado pequeño */
+    
+}
+
+.fragmentos-section {
+    flex: 1;
+    min-width: 250px; /* Ancho mínimo para la sección de fragmentos */
+    border-left: 2px solid #ddd;
+    padding-left: 20px;
+}
+
+/* Media query para pantallas pequeñas */
+@media (max-width: 768px) {
+    .home-container {
+        flex-direction: column; /* Cambia a una disposición en columna */
+    }
+
+    .fragmentos-section {
+        border-left: none; /* Quita la línea divisoria en pantallas pequeñas */
+        padding-left: 0;
+    }
+}
+

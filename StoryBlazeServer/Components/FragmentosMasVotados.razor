@@ -1,0 +1,47 @@
+﻿@page "/fragmentosmasvotados"
+@inject FragmentoService FragmentoService
+@using StoryBlazeServer.Models;
+
+<h3>Fragmentos Más Votados</h3>
+
+@if (fragmentosMasVotados == null)
+{
+    <p>Cargando...</p>
+}
+else if (!fragmentosMasVotados.Any())
+{
+    <p>No hay fragmentos votados aún.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Contenido</th>
+                <th>Votos</th>
+               
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fragmento in fragmentosMasVotados)
+            {
+                <tr>
+                    <td>@fragmento.FragmentoId</td>
+                    <td>@fragmento.Contenido</td>
+                    <td>@fragmento.VotosTotales</td>
+                    
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<FragmentoVotadoDto>? fragmentosMasVotados;
+
+    protected override async Task OnInitializedAsync()
+    {
+        fragmentosMasVotados = await FragmentoService.GetMasVotadosAsync();
+    }
+}

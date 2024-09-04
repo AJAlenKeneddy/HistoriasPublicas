@@ -5,7 +5,7 @@
         <tr>
             <th>Título</th>
             <th>Resumen</th>
-            <th>Fecha de Creación</th>
+            
             <th>Estado</th>
         </tr>
     </thead>
@@ -29,8 +29,7 @@
                 <tr>
                     <td>@historia.Titulo</td>
                     <td>@historia.Resumen</td>
-                    <td>@(historia.FechaCreacion?.ToShortDateString() ?? "No disponible")</td>
-                    <td>@historia.Estado</td>
+                   <td>@historia.Estado</td>
                 </tr>
             }
         }

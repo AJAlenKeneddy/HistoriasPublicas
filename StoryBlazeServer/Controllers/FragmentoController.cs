@@ -203,6 +203,36 @@ namespace StoryBlazeServer.Controllers
             }
         }
 
+        // GET: api/Fragmento/MasVotados
+        // Obtiene una lista de los fragmentos con más votos.
+        [HttpGet("MasVotados")]
+        public async Task<IActionResult> GetMasVotados()
+        {
+            try
+            {
+               
+                var fragmentosMasVotados = await _context.Fragmentos
+                    .Where(f => !f.Eliminado) 
+                    .Select(f => new
+                    {
+                        FragmentoId = f.FragmentoId,
+                        Contenido = f.Contenido,
+                        VotosTotales = f.Votos.Sum(v => v.Voto1),
+                        
+                    })
+                    .OrderByDescending(f => f.VotosTotales) 
+                    .Take(10) 
+                    .ToListAsync();
+
+                return Ok(new { IsSuccess = true, Data = fragmentosMasVotados });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error al obtener los fragmentos más votados.", Details = ex.Message });
+            }
+        }
+
+
         private bool FragmentoExists(int id)
         {
             return _context.Fragmentos.Any(e => e.FragmentoId == id && !e.Eliminado);

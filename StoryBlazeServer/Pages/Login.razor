@@ -1,0 +1,82 @@
+﻿@page "/login"
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using StoryBlazeServer.Models;
+
+<PageTitle>Acceso</PageTitle>
+
+<h1>Acceso</h1>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-danger" role="alert">
+        @message
+    </div>
+}
+
+<div class="access-form">
+    <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-group">
+            <label for="correo">Correo Electrónico:</label>
+            <InputText id="correo" class="form-control" @bind-Value="loginModel.Correo" />
+            <ValidationMessage For="@(() => loginModel.Correo)" />
+        </div>
+        <br />
+        <div class="form-group">
+            <label for="clave">Contraseña:</label>
+            <InputText id="clave" type="password" class="form-control" @bind-Value="loginModel.Clave" />
+            <ValidationMessage For="@(() => loginModel.Clave)" />
+        </div>
+        <br />
+        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+    </EditForm>
+
+    <hr />
+
+    <div>
+        <p>No tienes una cuenta? <a href="/register">Regístrate aquí</a></p>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private string? message;
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("https://localhost:7184/api/Acceso/Login", loginModel);
+            if (response.IsSuccessStatusCode)
+            {
+                var responseData = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+                if (responseData != null && responseData.IsSuccess)
+                {
+                    // Guardar el token en almacenamiento seguro
+                    // localStorage.SetItem("authToken", responseData.Token); // Si usas localStorage
+
+                    NavigationManager.NavigateTo("https://www.youtube.com/");
+                }
+                else
+                {
+                    message = "Inicio de sesión fallido: " + responseData?.Message;
+                }
+            }
+            else
+            {
+                message = "Correo electrónico o contraseña incorrectos.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Ocurrió un error: {ex.Message}";
+        }
+    }
+
+    
+}

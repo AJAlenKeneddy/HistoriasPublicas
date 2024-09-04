@@ -6,10 +6,18 @@
 <PageTitle>Home</PageTitle>
 
 <WelcomeBanner />
+<br />
 
-<h3>Historias</h3>
+<div class="home-container">
+    <div class="historias-section">
+        <h3>Historias</h3>
+        <HistoriaTable Historias="historias" />
+    </div>
 
-<HistoriaTable Historias="historias"  />
+    <div class="fragmentos-section">
+        <FragmentosMasVotados />
+    </div>
+</div>
 
 @code {
     private List<Historia>? historias;
