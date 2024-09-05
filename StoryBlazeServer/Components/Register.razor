@@ -1,0 +1,121 @@
+﻿@page "/register"
+@inject HttpClient Http
+@using StoryBlazeServer.Models;
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert @messageClass mt-4">
+        @message
+        @if (verificacionExitoso && messageClass == "alert-success")
+        {
+            <div class="mt-2">
+                <a href="/login" class="btn btn-link">Iniciar Sesión</a>
+            </div>
+        }
+    </div>
+}
+<h3>Registrarse</h3>
+
+<EditForm Model="registroModel" OnValidSubmit="HandleRegistro">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="nombre">Nombre:</label>
+        <InputText id="nombre" class="form-control" @bind-Value="registroModel.Nombre" />
+    </div>
+
+    <div class="form-group">
+        <label for="correo">Correo Electrónico:</label>
+        <InputText id="correo" class="form-control" @bind-Value="registroModel.Correo" />
+    </div>
+
+    <div class="form-group">
+        <label for="clave">Contraseña:</label>
+        <InputText id="clave" type="password" class="form-control" @bind-Value="registroModel.Clave" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Registrarse</button>
+</EditForm>
+
+@if (registroExitoso)
+{
+    <div class="mt-4">
+        <h4>Verificación de Cuenta</h4>
+
+        <EditForm Model="verificarCuentaModel" OnValidSubmit="HandleVerificacion">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="codigo">Código de Verificación:</label>
+                <InputText id="codigo" class="form-control" @bind-Value="verificarCuentaModel.CodigoVerificacion" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Verificar Cuenta</button>
+        </EditForm>
+    </div>
+}
+
+
+
+@code {
+    private RegistroModel registroModel = new RegistroModel();
+    private VerificarCuentaRequest verificarCuentaModel = new VerificarCuentaRequest();
+    private string? message;
+    private string messageClass = "";
+    private bool registroExitoso = false;
+    private bool verificacionExitoso = false; // Indica si la verificación fue exitosa
+
+    private async Task HandleRegistro()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("https://localhost:7184/api/Acceso/Registrarse", registroModel);
+            var result = await response.Content.ReadFromJsonAsync<Response<string>>();
+
+            if (result.IsSuccess)
+            {
+                registroExitoso = true; // Indica que el registro fue exitoso
+                message = result.Message;
+                messageClass = "alert-success";
+                verificarCuentaModel.Correo = registroModel.Correo; // Pasa el correo para la verificación
+            }
+            else
+            {
+                message = result.Message; // Muestra el mensaje de error del API
+                messageClass = "alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Ocurrió un error: {ex.Message}";
+            messageClass = "alert-danger";
+        }
+    }
+
+    private async Task HandleVerificacion()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("https://localhost:7184/api/Acceso/VerificarCuenta", verificarCuentaModel);
+            var result = await response.Content.ReadFromJsonAsync<Response<string>>();
+
+            if (result.IsSuccess)
+            {
+                message = result.Message;
+                messageClass = "alert-success";
+                verificacionExitoso = true; // Indica que la verificación fue exitosa
+            }
+            else
+            {
+                message = result.Message;
+                messageClass = "alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Ocurrió un error: {ex.Message}";
+            messageClass = "alert-danger";
+        }
+    }
+}

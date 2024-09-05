@@ -490,6 +490,25 @@ namespace StoryBlazeServer.Controllers
         }
 
 
+
+        [HttpGet("VerifyToken")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public IActionResult VerifyToken()
+        {
+            // Obtener la información del usuario autenticado
+            var user = User;
+
+            // Puedes devolver información relevante sobre el usuario o simplemente confirmar la autenticación
+            var response = new
+            {
+                IsAuthenticated = user.Identity.IsAuthenticated,
+                UserName = user.Identity.Name,
+                Claims = user.Claims.Select(c => new { c.Type, c.Value })
+            };
+
+            return Ok(response);
+        }
+
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [Route("CerrarSesion")]

@@ -1,0 +1,73 @@
+﻿@page "/login"
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@using StoryBlazeServer.Models
+@inject IJSRuntime JSRuntime
+
+<h3>Iniciar Sesión</h3>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert @messageClass">
+        @message
+    </div>
+}
+
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="correo">Correo Electrónico:</label>
+        <InputText id="correo" class="form-control" @bind-Value="loginModel.Correo" />
+    </div>
+    <br />
+    <div class="form-group">
+        <label for="clave">Contraseña:</label>
+        <InputText id="clave" type="password" class="form-control" @bind-Value="loginModel.Clave" />
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+</EditForm>
+<br />
+<p>@message</p>
+
+<p>¿No tienes una cuenta? <a href="/register">Regístrate aquí</a></p>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private string? message;
+    private string messageClass = "";
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("https://localhost:7184/api/Acceso/Login", loginModel);
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+            if (result.IsSuccess)
+            {
+                message = result.Message;
+                messageClass = "alert-success";
+                var token = result.Token;
+
+                // Guardar el token en localStorage
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "authToken", token);
+
+                // Redirigir al usuario
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                message = result.Message;
+                messageClass = "alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Ocurrió un error: {ex.Message}";
+            messageClass = "alert-danger";
+        }
+    }
+}
