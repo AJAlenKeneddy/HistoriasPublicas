@@ -39,7 +39,13 @@
             }
         }
     </tbody>
+    
+    
+
 </table>
+<div class="button-container">
+    <button @onclick="CrearHistoria" class="btn btn-success">Crear Una Historia</button>
+</div>
 
 @code {
     [Parameter]
@@ -51,5 +57,9 @@
     private void EditarHistoria(int historiaId)
     {
         NavigationManager.NavigateTo($"/historias/editar/{historiaId}");
+    }
+    private void CrearHistoria()
+    {
+        NavigationManager.NavigateTo($"/historias/crear");
     }
 }

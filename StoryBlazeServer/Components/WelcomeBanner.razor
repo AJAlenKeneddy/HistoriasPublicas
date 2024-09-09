@@ -1,13 +1,30 @@
 ﻿@using Microsoft.AspNetCore.Components
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
 
 <div class="welcome-banner">
     <div class="welcome-content">
         <h1>Bienvenido a StoryBlaze</h1>
         <p>Explora y comparte historias increíbles con nuestra comunidad.</p>
-        <a href="/login" class="btn-primary">Comienza a crear</a>
+        <button @onclick="CheckTokenAndRedirect" class="btn-primary">Comienza a crear</button>
     </div>
 </div>
 
 @code {
-    // Aquí puedes agregar lógica específica si es necesario
+    private async Task CheckTokenAndRedirect()
+    {
+        // Obtener el token desde localStorage
+        var token = await JsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            // Si hay token, redirigir a MisHistorias
+            NavigationManager.NavigateTo("/MisHistorias");
+        }
+        else
+        {
+            // Si no hay token, redirigir a la página de inicio de sesión
+            NavigationManager.NavigateTo("/login");
+        }
+    }
 }

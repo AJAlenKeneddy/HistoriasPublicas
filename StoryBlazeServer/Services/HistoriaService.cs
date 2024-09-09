@@ -1,16 +1,21 @@
 ﻿using Microsoft.JSInterop;
 using System.Net.Http.Json;
 using StoryBlazeServer.Models;
+using static Microsoft.AspNetCore.Razor.Language.TagHelperMetadata;
+using System.Net.Http.Headers;
+using StoryBlazeServer.Services;
 
 public class HistoriaService
 {
     private readonly HttpClient _httpClient;
     private readonly IJSRuntime _jsRuntime;
+    private readonly IJwtService _jwtService;
 
-    public HistoriaService(HttpClient httpClient, IJSRuntime jsRuntime)
+    public HistoriaService(HttpClient httpClient, IJSRuntime jsRuntime, IJwtService jwtService)
     {
         _httpClient = httpClient;
         _jsRuntime = jsRuntime;
+        _jwtService = jwtService;
     }
 
     // Obtener todas las historias
@@ -27,21 +32,66 @@ public class HistoriaService
         return response?.IsSuccess == true ? response.Data : null;
     }
 
-    // Agregar una nueva historia
     public async Task<bool> AgregarHistoriaAsync(Historia nuevaHistoria)
     {
-        var response = await _httpClient.PostAsJsonAsync("https://localhost:7184/api/Historias/AgregarHistoria", nuevaHistoria);
+        // Obtener el token desde localStorage
+        var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            // Obtener el ID del usuario desde el token
+            var userId = _jwtService.GetUserIdFromToken(token);
+
+            if (int.TryParse(userId, out int userIdInt))
+            {
+                nuevaHistoria.UsuarioCreadorId = userIdInt; // Asignar el ID del usuario a la historia
+                nuevaHistoria.FechaCreacion = DateTime.Now; // Establecer la fecha de creación
+            }
+        }
+
+        // Crear el mensaje de solicitud
+        var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7184/api/Historias/AgregarHistoria")
+        {
+            Content = JsonContent.Create(nuevaHistoria) // Enviar el contenido JSON
+        };
+
+        // Agregar el encabezado de autorización
+        if (!string.IsNullOrEmpty(token))
+        {
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        // Enviar la solicitud
+        var response = await _httpClient.SendAsync(requestMessage);
         var result = await response.Content.ReadFromJsonAsync<Response<object>>();
         return result?.IsSuccess == true;
     }
 
+
+
     // Actualizar una historia existente
     public async Task<bool> ActualizarHistoriaAsync(int id, Historia historiaActualizada)
     {
-        var response = await _httpClient.PutAsJsonAsync($"https://localhost:7184/api/Historias/ActualizarHistoria/{id}", historiaActualizada);
+        // Recuperar el token desde localStorage usando JS Interop
+        var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+
+        // Crear un HttpRequestMessage para agregar el token en el encabezado de autorización
+        var request = new HttpRequestMessage(HttpMethod.Put, $"https://localhost:7184/api/Historias/ActualizarHistoria/{id}")
+        {
+            Content = JsonContent.Create(historiaActualizada)
+        };
+
+        // Agregar el token de autorización en el encabezado
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Enviar la solicitud
+        var response = await _httpClient.SendAsync(request);
+
+        // Leer la respuesta y verificar si fue exitosa
         var result = await response.Content.ReadFromJsonAsync<Response<object>>();
         return result?.IsSuccess == true;
     }
+
 
     // Eliminar (lógicamente) una historia
     public async Task<bool> EliminarHistoriaAsync(int id)

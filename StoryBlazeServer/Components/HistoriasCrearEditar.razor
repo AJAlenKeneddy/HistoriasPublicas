@@ -2,7 +2,7 @@
 @page "/historias/editar/{id:int}"
 
 @inject HistoriaService historiaService
-@inject NavigationManager navigationManager 
+@inject NavigationManager navigationManager
 @using StoryBlazeServer.Models
 @using StoryBlazeServer.Components
 
@@ -13,19 +13,24 @@
 
     <div class="form-group">
         <label for="titulo">Título</label>
-        <InputText id="titulo" class="form-control" Value="@Historia.Titulo" ValueChanged="(val) => Historia.Titulo = val" ValueExpression="() => Historia.Titulo" />
+        <InputText id="titulo" class="form-control" Value="@Historia.Titulo" ValueChanged="(val) => Historia.Titulo = val" ValueExpression="() => Historia.Titulo" maxlength="30" />
     </div>
 
     <div class="form-group">
         <label for="resumen">Resumen</label>
-        <InputTextArea id="resumen" class="form-control" Value="@Historia.Resumen" ValueChanged="(val) => Historia.Resumen = val" ValueExpression="() => Historia.Resumen" />
+        <InputTextArea id="resumen" class="form-control"
+                       Value="@Historia.Resumen"
+                       ValueChanged="(val) => Historia.Resumen = val"
+                       ValueExpression="() => Historia.Resumen"
+                       maxlength="40" />
     </div>
+
 
     <div class="form-group">
         <label for="estado">Estado</label>
-        <InputText id="estado" class="form-control" Value="@Historia.Estado" ValueChanged="(val) => Historia.Estado = val" ValueExpression="() => Historia.Estado" />
+        <InputText id="estado" class="form-control" Value="@Historia.Estado" readonly="true" ValueChanged="(val) => Historia.Estado = val" ValueExpression="() => Historia.Estado" />
     </div>
-
+    <br />
     <button type="submit" class="btn btn-primary">@((Historia.HistoriaId == 0) ? "Crear" : "Actualizar")</button>
 </EditForm>
 
@@ -45,7 +50,7 @@
             if (Historia == null)
             {
                 // Manejo de errores si no se encuentra la historia
-                navigationManager.NavigateTo("/historias");
+                navigationManager.NavigateTo("/MisHistorias");
             }
             else
             {
@@ -70,7 +75,7 @@
 
         if (resultado)
         {
-            navigationManager.NavigateTo("/historias");
+            navigationManager.NavigateTo("/MisHistorias");
         }
         else
         {

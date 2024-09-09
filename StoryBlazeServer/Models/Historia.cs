@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace StoryBlazeServer.Models;
 
 public partial class Historia
 {
     public int HistoriaId { get; set; }
-
+    [StringLength(30, ErrorMessage = "El resumen no puede tener más de 30 caracteres.")]
     public string Titulo { get; set; } = null!;
 
+    [StringLength(40, ErrorMessage = "El resumen no puede tener más de 40 caracteres.")]
     public string? Resumen { get; set; }
 
     public int? UsuarioCreadorId { get; set; }

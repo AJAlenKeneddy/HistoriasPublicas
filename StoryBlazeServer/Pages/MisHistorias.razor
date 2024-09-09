@@ -2,6 +2,8 @@
 
 @using StoryBlazeServer.Models
 @inject HistoriaService HistoriaService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 <div class="historias-section">
     <h3>Mis Historias</h3>
@@ -28,6 +30,17 @@
         {
             try
             {
+                // Verificar el token antes de intentar cargar las historias
+                var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    // Si no hay token, redirigir al login
+                    NavigationManager.NavigateTo("/login");
+                    return;
+                }
+
+                // Si hay token, cargar las historias
                 historias = await HistoriaService.GetHistoriasByUserAsync();
                 StateHasChanged(); // Actualizar el estado del componente después de cargar las historias
             }
