@@ -2,20 +2,16 @@
 using Microsoft.AspNetCore.Mvc;
 using StoryBlazeServer.Models;
 using Microsoft.EntityFrameworkCore;
-using WEBAPIGMINGENIEROSHTTPS.Custom;
-using WEBAPIGMINGENIEROSHTTPS.Models.Services;
-
-using Microsoft.Data.SqlClient;
-using System.Reflection.Metadata.Ecma335;
+using StoryBlazeServer.Custom;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using StoryBlazeServer.Models.Services;
+using StoryBlazeServer.Services;
+
 
 namespace StoryBlazeServer.Controllers
 {
-
-
-
     /* 
      Configuracion del Enpoint y llamado de Contexto de la BD ademas 
      de Utilidades y el Servicio de Envio de Correo
@@ -27,11 +23,13 @@ namespace StoryBlazeServer.Controllers
         private readonly StoryBlazeServerContext db;
         private readonly Utilidades util;
         private readonly EmailService emailService;
-        public AccesoController(StoryBlazeServerContext StoryBlazeServerContext, Utilidades utilidades, EmailService emailService)
+        private readonly IJwtService _jwtService;
+        public AccesoController(StoryBlazeServerContext StoryBlazeServerContext, Utilidades utilidades, EmailService emailService, IJwtService jwtService)
         {
             db = StoryBlazeServerContext;
             util = utilidades;
             this.emailService = emailService;
+            _jwtService = jwtService;
         }
 
 
@@ -133,8 +131,7 @@ namespace StoryBlazeServer.Controllers
         /*
          Endpoint para poder Iniciar Session con utilidad de DesHash de Contraseña     
          */
-        [HttpPost]
-        [Route("Login")]
+        [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
             if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Correo) || string.IsNullOrEmpty(loginRequest.Clave))
@@ -152,7 +149,7 @@ namespace StoryBlazeServer.Controllers
                 else if (!usuarioEncontrado.Verificado)
                     return Unauthorized(new LoginResponse { IsSuccess = false, Message = "El correo no ha sido verificado. Por favor, verifica tu correo antes de iniciar sesión." });
 
-                var token = util.generarJWT(usuarioEncontrado);
+                var token = _jwtService.GenerateToken(usuarioEncontrado);
 
                 return Ok(new LoginResponse
                 {
@@ -166,11 +163,11 @@ namespace StoryBlazeServer.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new LoginResponse
                 {
                     IsSuccess = false,
-                    Message = ("Error interno del servidor.")
-                    
+                    Message = "Error interno del servidor."
                 });
             }
         }
+
 
 
 
@@ -495,19 +492,42 @@ namespace StoryBlazeServer.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public IActionResult VerifyToken()
         {
+            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            if (token == null)
+            {
+                return Unauthorized(new { Message = "No token provided" });
+            }
+
+            // Obtener el ID del usuario desde el token
+            var userId = _jwtService.GetUserIdFromToken(token);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { Message = "Invalid token" });
+            }
+
             // Obtener la información del usuario autenticado
             var user = User;
+
+            if (user.Identity == null || !user.Identity.IsAuthenticated)
+            {
+                return Unauthorized(new { Message = "User is not authenticated or token is invalid" });
+            }
 
             // Puedes devolver información relevante sobre el usuario o simplemente confirmar la autenticación
             var response = new
             {
                 IsAuthenticated = user.Identity.IsAuthenticated,
                 UserName = user.Identity.Name,
+                UserId = userId,
                 Claims = user.Claims.Select(c => new { c.Type, c.Value })
             };
 
             return Ok(response);
         }
+
+
+
 
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -517,12 +537,6 @@ namespace StoryBlazeServer.Controllers
             // Aquí puedes implementar lógica para invalidar el token JWT, si estás usando uno.
             return Ok(new { IsSuccess = true, Message = "Sesión cerrada exitosamente." });
         }
-
-
-
-
-
-
 
 
     }

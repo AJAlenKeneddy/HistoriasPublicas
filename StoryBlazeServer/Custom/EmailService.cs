@@ -1,7 +1,8 @@
 ﻿using MimeKit;
 using MailKit.Net.Smtp;
 using System.Threading.Tasks;
-namespace WEBAPIGMINGENIEROSHTTPS.Models.Services
+
+namespace StoryBlazeServer.Models.Services
 {
     public class EmailService
     {

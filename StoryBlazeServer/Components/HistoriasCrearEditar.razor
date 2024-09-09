@@ -1,0 +1,80 @@
+﻿@page "/historias/crear"
+@page "/historias/editar/{id:int}"
+
+@inject HistoriaService historiaService
+@inject NavigationManager navigationManager 
+@using StoryBlazeServer.Models
+@using StoryBlazeServer.Components
+
+<h3>@(Historia.HistoriaId == 0 ? "Crear Historia" : "Editar Historia")</h3>
+<EditForm Model="Historia" OnValidSubmit="GuardarHistoria">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label for="titulo">Título</label>
+        <InputText id="titulo" class="form-control" Value="@Historia.Titulo" ValueChanged="(val) => Historia.Titulo = val" ValueExpression="() => Historia.Titulo" />
+    </div>
+
+    <div class="form-group">
+        <label for="resumen">Resumen</label>
+        <InputTextArea id="resumen" class="form-control" Value="@Historia.Resumen" ValueChanged="(val) => Historia.Resumen = val" ValueExpression="() => Historia.Resumen" />
+    </div>
+
+    <div class="form-group">
+        <label for="estado">Estado</label>
+        <InputText id="estado" class="form-control" Value="@Historia.Estado" ValueChanged="(val) => Historia.Estado = val" ValueExpression="() => Historia.Estado" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">@((Historia.HistoriaId == 0) ? "Crear" : "Actualizar")</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int? id { get; set; }
+
+    private Historia Historia { get; set; } = new Historia();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (id.HasValue)
+        {
+            // Carga de datos de la historia para edición
+            Historia = await historiaService.GetHistoriaByIdAsync(id.Value);
+
+            if (Historia == null)
+            {
+                // Manejo de errores si no se encuentra la historia
+                navigationManager.NavigateTo("/historias");
+            }
+            else
+            {
+                // Forzar renderizado para reflejar los datos en el formulario
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task GuardarHistoria()
+    {
+        bool resultado;
+
+        if (Historia.HistoriaId == 0) // Crear nueva historia
+        {
+            resultado = await historiaService.AgregarHistoriaAsync(Historia);
+        }
+        else // Actualizar historia existente
+        {
+            resultado = await historiaService.ActualizarHistoriaAsync(Historia.HistoriaId, Historia);
+        }
+
+        if (resultado)
+        {
+            navigationManager.NavigateTo("/historias");
+        }
+        else
+        {
+            // Mostrar error o manejar fallo
+        }
+    }
+}

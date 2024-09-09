@@ -6,7 +6,7 @@
             <th>Título</th>
             <th>Resumen</th>
             <th>Estado</th>
-            
+            <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -30,7 +30,11 @@
                     <td>@historia.Titulo</td>
                     <td>@historia.Resumen</td>
                     <td>@historia.Estado</td>
-                    
+                    <td>
+                        <button @onclick="() => EditarHistoria(historia.HistoriaId)" class="btn btn-primary">
+                            Editar
+                        </button>
+                    </td>
                 </tr>
             }
         }
@@ -41,6 +45,11 @@
     [Parameter]
     public List<Historia>? Historias { get; set; }
 
-    
-}
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
 
+    private void EditarHistoria(int historiaId)
+    {
+        NavigationManager.NavigateTo($"/historias/editar/{historiaId}");
+    }
+}

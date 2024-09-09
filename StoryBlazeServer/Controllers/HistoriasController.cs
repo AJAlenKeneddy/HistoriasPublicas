@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using StoryBlazeServer.Models;
+using StoryBlazeServer.Services;
 
 namespace StoryBlazeServer.Controllers
 {
@@ -18,10 +19,12 @@ namespace StoryBlazeServer.Controllers
     public class HistoriasController : ControllerBase
     {
         private readonly StoryBlazeServerContext _context;
+        private readonly IJwtService _jwtService;
 
-        public HistoriasController(StoryBlazeServerContext context)
+        public HistoriasController(StoryBlazeServerContext context, IJwtService jwtService)
         {
             _context = context;
+            _jwtService = jwtService;
         }
         [HttpGet("ListarHistorias")]
         public async Task<IActionResult> ListarHistorias()
@@ -166,7 +169,54 @@ namespace StoryBlazeServer.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error al restaurar la historia.", Details = ex.Message });
             }
         }
+
+        [HttpGet("usuario/historias")]
+        public async Task<ActionResult<Response<List<Historia>>>> GetHistoriasByUser()
+        {
+            try
+            {
+                // Obtén el token desde el encabezado de la solicitud
+                var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+                // Obtén el UserId desde el token
+                var userIdString = _jwtService.GetUserIdFromToken(token);
+
+                if (string.IsNullOrEmpty(userIdString))
+                {
+                    return Unauthorized(new Response<List<Historia>> { IsSuccess = false, Message = "Token inválido o no se pudo obtener el ID de usuario." });
+                }
+
+                // Convertir el userId a entero
+                if (!int.TryParse(userIdString, out int userId))
+                {
+                    return Unauthorized(new Response<List<Historia>> { IsSuccess = false, Message = "El ID de usuario no es válido." });
+                }
+
+                // Buscar historias del usuario
+                var historias = await _context.Historias
+                                              .Where(h => h.UsuarioCreadorId == userId)
+                                              .ToListAsync();
+
+                // Envolver las historias en el objeto Response<>
+                var response = new Response<List<Historia>>
+                {
+                    IsSuccess = true,
+                    Data = historias
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new Response<List<Historia>> { IsSuccess = false, Message = $"Error interno del servidor: {ex.Message}" });
+            }
+        }
+
+
+
     }
+
+
 
 
 

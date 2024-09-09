@@ -1,0 +1,40 @@
+﻿@page "/MisHistorias"
+
+@using StoryBlazeServer.Models
+@inject HistoriaService HistoriaService
+
+<div class="historias-section">
+    <h3>Mis Historias</h3>
+    @if (historias == null)
+    {
+        <p>Cargando historias...</p>
+    }
+    else if (historias.Count == 0)
+    {
+        <p>No se encontraron historias.</p>
+    }
+    else
+    {
+        <HistoriaTableEditar Historias="historias" />
+    }
+</div>
+
+@code {
+    private List<Historia>? historias;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                historias = await HistoriaService.GetHistoriasByUserAsync();
+                StateHasChanged(); // Actualizar el estado del componente después de cargar las historias
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al cargar las historias: {ex.Message}");
+            }
+        }
+    }
+}

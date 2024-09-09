@@ -35,12 +35,12 @@ async function checkAuthToken() {
 
 document.addEventListener('DOMContentLoaded', (event) => {
     checkAuthToken().then(isAuthenticated => {
-        if (isAuthenticated) {
-            // Redirigir a la página principal si el token es válido
-            window.location.href = '/';
-        } else {
-            // Redirigir a la página de inicio de sesión si el token no es válido
+        if (!isAuthenticated) {
+            
             window.location.href = '/login';
+        } else {
+            
+            
         }
     });
 });
