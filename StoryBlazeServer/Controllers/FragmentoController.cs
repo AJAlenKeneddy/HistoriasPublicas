@@ -15,9 +15,9 @@ namespace StoryBlazeServer.Controllers
     [ApiController]
     public class FragmentoController : ControllerBase
     {
-        private readonly StoryBlazeServerContext _context;
+        private readonly StoryBlazeContext _context;
 
-        public FragmentoController(StoryBlazeServerContext context)
+        public FragmentoController(StoryBlazeContext context)
         {
             _context = context;
         }
