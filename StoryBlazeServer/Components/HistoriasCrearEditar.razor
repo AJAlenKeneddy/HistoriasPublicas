@@ -42,8 +42,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Historia.Estado = "En curso";
         if (id.HasValue)
         {
+           
             // Carga de datos de la historia para edición
             Historia = await historiaService.GetHistoriaByIdAsync(id.Value);
 
