@@ -15,9 +15,9 @@ namespace StoryBlazeServer.Controllers
     [ApiController]
     public class ComentariosController : ControllerBase
     {
-        private readonly StoryBlazeServerContext _context;
+        private readonly StoryBlazeContext _context;
 
-        public ComentariosController(StoryBlazeServerContext context)
+        public ComentariosController(StoryBlazeContext context)
         {
             _context = context;
         }
