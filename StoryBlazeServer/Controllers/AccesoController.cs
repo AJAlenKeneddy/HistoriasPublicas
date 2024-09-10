@@ -20,11 +20,11 @@ namespace StoryBlazeServer.Controllers
     [ApiController]
     public class AccesoController : ControllerBase
     {
-        private readonly StoryBlazeServerContext db;
+        private readonly StoryBlazeContext db;
         private readonly Utilidades util;
         private readonly EmailService emailService;
         private readonly IJwtService _jwtService;
-        public AccesoController(StoryBlazeServerContext StoryBlazeServerContext, Utilidades utilidades, EmailService emailService, IJwtService jwtService)
+        public AccesoController(StoryBlazeContext StoryBlazeServerContext, Utilidades utilidades, EmailService emailService, IJwtService jwtService)
         {
             db = StoryBlazeServerContext;
             util = utilidades;
