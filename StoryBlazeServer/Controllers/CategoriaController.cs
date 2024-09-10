@@ -11,9 +11,9 @@ namespace StoryBlazeServer.Controllers
     [ApiController]
     public class CategoriaController : ControllerBase
     {
-        private readonly StoryBlazeServerContext _context;
+        private readonly StoryBlazeContext _context;
 
-        public CategoriaController(StoryBlazeServerContext context)
+        public CategoriaController(StoryBlazeContext context)
         {
             _context = context;
         }
