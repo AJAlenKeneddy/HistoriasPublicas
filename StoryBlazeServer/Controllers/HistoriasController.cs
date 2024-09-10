@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -14,14 +15,14 @@ using StoryBlazeServer.Services;
 namespace StoryBlazeServer.Controllers
 {
     [Route("api/[controller]")]
-    
+
     [ApiController]
     public class HistoriasController : ControllerBase
     {
-        private readonly StoryBlazeServerContext _context;
+        private readonly StoryBlazeContext _context;
         private readonly IJwtService _jwtService;
 
-        public HistoriasController(StoryBlazeServerContext context, IJwtService jwtService)
+        public HistoriasController(StoryBlazeContext context, IJwtService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
@@ -65,7 +66,7 @@ namespace StoryBlazeServer.Controllers
             }
         }
 
-       
+
 
         [HttpPost("AgregarHistoria")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -86,9 +87,9 @@ namespace StoryBlazeServer.Controllers
             }
         }
 
-        
 
-        
+
+
 
         [HttpPut("ActualizarHistoria/{id}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -144,7 +145,7 @@ namespace StoryBlazeServer.Controllers
             }
         }
 
-        
+
 
         [HttpPut("RestaurarHistoria/{id}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -212,8 +213,100 @@ namespace StoryBlazeServer.Controllers
             }
         }
 
+        [HttpGet("ObtenerHistoriaCompleta/{historiaId}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<ActionResult<Historia>> ObtenerHistoriaCompleta(int historiaId)
+        {
+            try
+            {
+                // Obtener la historia, fragmentos y comentarios mediante el SP
+                var historiaCompleta = new Historia();
+
+                // Ejecutar el procedimiento almacenado y mapear los resultados
+                using (var command = _context.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = "ObtenerHistoriaCompleta";
+                    command.CommandType = CommandType.StoredProcedure;
+
+                    // Añadir parámetro
+                    var param = command.CreateParameter();
+                    param.ParameterName = "@HistoriaId";
+                    param.Value = historiaId;
+                    command.Parameters.Add(param);
+
+                    await _context.Database.OpenConnectionAsync();
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        // Leer la historia
+                        if (await reader.ReadAsync())
+                        {
+                            historiaCompleta.HistoriaId = reader.GetInt32(0);
+                            historiaCompleta.Titulo = reader.GetString(1);
+                            historiaCompleta.Resumen = reader.GetString(2);
+                            historiaCompleta.FechaCreacion = reader.GetDateTime(3);
+                            historiaCompleta.Estado = reader.GetString(4);
+                            historiaCompleta.UsuarioCreadorId = reader.GetInt32(5);
+                        }
+
+                        // Leer los fragmentos
+                        if (await reader.NextResultAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                var fragmento = new Fragmento
+                                {
+                                    FragmentoId = reader.GetInt32(0),
+                                    Contenido = reader.GetString(1),
+                                    FechaCreacionFrag = reader.GetDateTime(2),
+                                    UsuarioId = reader.GetInt32(4),
+                                    TotalVotos = reader.GetInt32(5)
+
+                                };
+
+                                historiaCompleta.Fragmentos.Add(fragmento);
+                            }
+                        }
+
+                        // Leer los comentarios
+                        if (await reader.NextResultAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                var comentario = new Comentario
+                                {
+                                    ComentarioId = reader.GetInt32(0),
+                                    Comentario1 = reader.GetString(1),
+                                    FechaComentario = reader.GetDateTime(2),
+                                    UsuarioId = reader.GetInt32(4)
+                                };
+
+                                // Asignar el comentario al fragmento correspondiente
+                                var fragmento = historiaCompleta.Fragmentos.FirstOrDefault(f => f.FragmentoId == reader.GetInt32(3));
+                                if (fragmento != null)
+                                {
+                                    fragmento.Comentarios.Add(comentario);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (historiaCompleta == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(historiaCompleta);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error: {ex.Message}");
+            }
 
 
+
+        }
     }
 
 
