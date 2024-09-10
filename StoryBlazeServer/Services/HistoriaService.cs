@@ -133,5 +133,30 @@ public class HistoriaService
         // Si la respuesta es exitosa, devolver los datos
         return response?.IsSuccess == true ? response.Data : new List<Historia>();
     }
+    public async Task<Historia?> ObtenerHistoriaCompletaAsync(int historiaId)
+    {
+        // Obtener el token desde localStorage
+        var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+
+        // Crear la solicitud HTTP
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"https://localhost:7184/api/Historias/ObtenerHistoriaCompleta/{historiaId}");
+
+        // Agregar el encabezado de autorización
+        if (!string.IsNullOrEmpty(token))
+        {
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        // Enviar la solicitud
+        var response = await _httpClient.SendAsync(requestMessage);
+        if (response.IsSuccessStatusCode)
+        {
+            // Deserializar la respuesta
+            var historiaCompleta = await response.Content.ReadFromJsonAsync<Historia>();
+            return historiaCompleta;
+        }
+
+        return null;
+    }
 
 }
