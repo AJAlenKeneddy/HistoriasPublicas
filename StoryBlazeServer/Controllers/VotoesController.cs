@@ -12,9 +12,9 @@ namespace StoryBlazeServer.Controllers
     [ApiController]
     public class VotosController : ControllerBase
     {
-        private readonly StoryBlazeServerContext _context;
+        private readonly StoryBlazeContext _context;
 
-        public VotosController(StoryBlazeServerContext context)
+        public VotosController(StoryBlazeContext context)
         {
             _context = context;
         }
