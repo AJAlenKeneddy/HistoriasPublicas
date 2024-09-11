@@ -64,10 +64,10 @@ a, .btn-link {
     }
 
 .welcome-banner {
-    background-image: url('https://i.imgur.com/PKfMP0W.jpeg'); 
+    background-image: url('https://i.imgur.com/PKfMP0W.jpeg');
     background-size: cover;
     background-position: center;
-    height: 400px; 
+    height: 400px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -77,7 +77,7 @@ a, .btn-link {
 }
 
 .welcome-content {
-    background: rgba(0, 0, 0, 0.5); 
+    background: rgba(0, 0, 0, 0.5);
     padding: 2rem;
     border-radius: 0.5rem;
 }
@@ -95,110 +95,172 @@ a, .btn-link {
         background: #e67e22;
     }
 
-/* Estilos generales para la tabla */
-/* Estilos generales para la tabla */
+
 .table {
     width: 100%;
     border-collapse: collapse;
-    background: #fff;
+    background: #f5f5f5; /* Color de fondo suave */
     border-radius: 0.5rem;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra más suave */
     animation: bounceIn 0.8s ease-out;
 }
 
+    /* Estilos para la cabecera */
     .table thead {
-        background: #f39c12;
-        color: #fff;
+        background: #2c3e50; /* Color de fondo más oscuro */
+        color: #fff; /* Texto blanco para contraste */
     }
 
     .table th, .table td {
         padding: 0.8rem;
         text-align: left;
-        border-bottom: 1px solid #ddd;
+        border-bottom: 1px solid #ccc; /* Bordes más suaves */
         transition: background 0.3s ease;
     }
 
     .table th {
         font-size: 1rem;
         font-weight: bold;
+        text-align: center; /* Texto centrado para una apariencia más limpia */
     }
 
     .table td {
         font-size: 0.85rem;
+        text-align: center; /* Centramos el contenido */
     }
 
     .table tbody tr {
-        background: #f9f9f9;
+        background: #ffffff; /* Fondo blanco para las filas */
         animation: fadeIn 0.8s ease-out;
     }
 
+        .table tbody tr:nth-child(odd) {
+            background: #ecf0f1; /* Alternar filas con un gris suave */
+        }
+
         .table tbody tr:hover {
-            background: #f1c40f;
+            background: #34495e; /* Fondo oscuro en hover */
+            color: #ffffff; /* Texto blanco para contraste en hover */
             cursor: pointer;
         }
 
-/* Animaciones */
+/* Diseño responsivo */
+@media (max-width: 968px) {
+    .table {
+        border: 0;
+    }
+
+        /* Ocultar la cabecera de la tabla en pantallas pequeñas */
+        .table thead {
+            display: none;
+        }
+
+        /* Mostrar cada fila como un bloque independiente */
+        .table tbody tr {
+            display: block;
+            margin-bottom: 0.625rem;
+            border-bottom: 2px solid #2c3e50; /* Color del borde en pantallas pequeñas */
+            background-color: #ffffff;
+        }
+
+            /* Deshabilitar hover en pantallas pequeñas */
+            .table tbody tr:hover {
+                background: #ffffff; /* Sin efecto de hover */
+                color: #000000; /* Sin cambio de color */
+                cursor: default; /* Sin cambio de cursor */
+            }
+
+        /* Cambiar la visualización de las celdas */
+        .table td {
+            display: block;
+            text-align: right;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+            padding-left: 50%;
+            white-space: normal;
+        }
+
+            /* Agregar una etiqueta a cada celda en pantallas pequeñas */
+            .table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0;
+                width: 50%;
+                padding-left: 0.8rem;
+                font-weight: bold;
+                text-align: left;
+                background-color: #2c3e50;
+                color: #fff;
+            }
+
+            .table td:last-child {
+                border-bottom: 0;
+            }
+}
+
+
+Animaciones
 @keyframes bounceIn {
-    0% {
-        opacity: 0;
-        transform: scale(0.9);
-    }
+    0%
 
-    60% {
-        opacity: 1;
-        transform: scale(1.03);
-    }
-
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
+{
+    opacity: 0;
+    transform: scale(0.9);
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-.home-container {
-    display: flex;
-    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
+60% {
+    opacity: 1;
+    transform: scale(1.03);
 }
 
-.historias-section {
-    flex: 2;
-    min-width: 300px; /* Ancho mínimo para que no se haga demasiado pequeño */
-    
+100% {
+    opacity: 1;
+    transform: scale(1);
 }
 
-.fragmentos-section {
-    flex: 1;
-    min-width: 250px; /* Ancho mínimo para la sección de fragmentos */
-    border-left: 2px solid #ddd;
-    padding-left: 20px;
 }
 
-/* Media query para pantallas pequeñas */
-@media (max-width: 768px) {
-    .home-container {
-        flex-direction: column; /* Cambia a una disposición en columna */
-    }
 
-    .fragmentos-section {
-        border-left: none; /* Quita la línea divisoria en pantallas pequeñas */
-        padding-left: 0;
-    }
-}
 .button-container {
     text-align: center;
 }
 
+.home-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
 
+.categorias-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Tres columnas */
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.categoria-item {
+    padding: 1rem;
+    background-color: #f1f1f1;
+    text-align: center;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+    .categoria-item:hover {
+        background-color: #0071c1;
+        color: white;
+    }
+
+.historias-section {
+    margin-top: 2rem;
+}
+
+/* Responsividad para pantallas más pequeñas */
+@media (max-width: 768px) {
+    .categorias-grid {
+        grid-template-columns: 1fr; /* Una columna en pantallas pequeñas */
+    }
+}
