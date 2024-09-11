@@ -39,5 +39,24 @@ namespace StoryBlazeServer.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error interno del servidor.", Details = ex.Message });
             }
         }
+
+        [HttpGet("ListadoCategoria")]
+        public async Task<IActionResult> ListarCategorias()
+        {
+            try
+            {
+                var listado = await _context.Categoria.ToListAsync();
+
+                if (!listado.Any())
+                    return NotFound(new { IsSuccess = false, Message = "No se encontraron Categorias" });
+
+                return Ok(new { IsSuccess = true, Data = listado });
+
+
+            }
+            catch(Exception ex) {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { IsSuccess = false, Message = "Error interno del servidor.", Details = ex.Message });
+            }
+        }
     }
 }
