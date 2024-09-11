@@ -1,0 +1,42 @@
+﻿@using StoryBlazeServer.Services
+@using StoryBlazeServer.Models
+
+@inject CategoriaService CategoriaService
+@inject NavigationManager NavigationManager
+
+<h2>Categorías</h2>
+
+@if (categorias == null)
+{
+    <p>Cargando...</p>
+}
+else if (categorias.Count == 0)
+{
+    <p>No se encontraron categorías.</p>
+}
+else
+{
+    <div class="categorias-grid">
+        @foreach (var categoria in categorias)
+        {
+            <div class="categoria-item" @onclick="() => NavegarCategoria(categoria.Nombre)">
+                @categoria.Nombre
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Categoria> categorias;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categorias = await CategoriaService.GetCategorias();
+    }
+
+    private void NavegarCategoria(string nombreCategoria)
+    {
+        // Navega a la página de la categoría específica
+        NavigationManager.NavigateTo($"/{nombreCategoria}");
+    }
+}
