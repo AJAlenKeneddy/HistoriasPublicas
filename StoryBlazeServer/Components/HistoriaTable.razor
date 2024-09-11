@@ -1,4 +1,5 @@
 ﻿@using StoryBlazeServer.Models
+@inject NavigationManager Navigation
 
 <table class="table">
     <thead>
@@ -6,31 +7,29 @@
             <th>Título</th>
             <th>Resumen</th>
             <th>Estado</th>
-            
         </tr>
     </thead>
     <tbody>
         @if (Historias == null)
         {
             <tr>
-                <td colspan="4">Cargando...</td>
+                <td colspan="3">Cargando...</td>
             </tr>
         }
         else if (Historias.Count == 0)
         {
             <tr>
-                <td colspan="4">No se encontraron historias.</td>
+                <td colspan="3">No se encontraron historias.</td>
             </tr>
         }
         else
         {
             @foreach (var historia in Historias)
             {
-                <tr>
-                    <td>@historia.Titulo</td>
-                    <td>@historia.Resumen</td>
-                    <td>@historia.Estado</td>
-                    
+                <tr @onclick="() => NavigateToHistoria(historia.HistoriaId)">
+                    <td data-label="Título">@historia.Titulo</td>
+                    <td data-label="Resumen">@historia.Resumen</td>
+                    <td data-label="Estado">@historia.Estado</td>
                 </tr>
             }
         }
@@ -41,6 +40,10 @@
     [Parameter]
     public List<Historia>? Historias { get; set; }
 
+    private void NavigateToHistoria(int historiaId)
+    {
+        Navigation.NavigateTo($"/historia/{historiaId}");
+    }
+
     
 }
-

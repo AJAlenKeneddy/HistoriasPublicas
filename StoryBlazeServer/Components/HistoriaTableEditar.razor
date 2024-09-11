@@ -1,6 +1,6 @@
 ﻿@using StoryBlazeServer.Models
 
-<table class="table">
+<table class="table ">
     <thead>
         <tr>
             <th>Título</th>
@@ -27,11 +27,11 @@
             @foreach (var historia in Historias)
             {
                 <tr>
-                    <td>@historia.Titulo</td>
-                    <td>@historia.Resumen</td>
-                    <td>@historia.Estado</td>
+                    <td data-label="Título">@historia.Titulo</td>
+                    <td data-label="Resumen">@historia.Resumen</td>
+                    <td data-label="Estado">@historia.Estado</td>
                     <td>
-                        <button @onclick="() => EditarHistoria(historia.HistoriaId)" class="btn btn-primary">
+                        <button @onclick="() => EditarHistoria(historia.HistoriaId)" class="btn btn-light">
                             Editar
                         </button>
                     </td>
