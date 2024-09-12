@@ -1,0 +1,47 @@
+﻿@page "/categoriashistorias/{categoriaId:int}"
+
+@inject HistoriaService historiaService
+@inject NavigationManager navigationManager
+
+<h3>Historias de la Categoría </h3>
+
+@if (Historias == null)
+{
+    <p>Cargando...</p>
+}
+else if (Historias.Count == 0)
+{
+    <p>No se encontraron historias para esta categoría.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Resumen</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var historia in Historias)
+            {
+                <tr>
+                    <td>@historia.Titulo</td>
+                    <td>@historia.Resumen</td>
+                    <td>@historia.Estado</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public int categoriaId { get; set; }
+    private List<Historia> Historias { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Historias = await historiaService.GetHistoriasPorCategoriaAsync(categoriaId);
+    }
+}
