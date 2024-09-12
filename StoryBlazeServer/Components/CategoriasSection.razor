@@ -19,7 +19,7 @@ else
     <div class="categorias-grid">
         @foreach (var categoria in categorias)
         {
-            <div class="categoria-item" @onclick="() => NavegarCategoria(categoria.Nombre)">
+            <div class="categoria-item" @onclick="() => NavegarCategoria(categoria.CategoriaId)">
                 @categoria.Nombre
             </div>
         }
@@ -34,9 +34,9 @@ else
         categorias = await CategoriaService.GetCategorias();
     }
 
-    private void NavegarCategoria(string nombreCategoria)
+    private void NavegarCategoria(int CategoriaID)
     {
-        // Navega a la página de la categoría específica
-        NavigationManager.NavigateTo($"/{nombreCategoria}");
+        
+        NavigationManager.NavigateTo($"/categoriashistorias/{CategoriaID}");
     }
 }

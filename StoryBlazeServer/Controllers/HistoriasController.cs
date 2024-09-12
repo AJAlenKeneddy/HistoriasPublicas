@@ -306,7 +306,57 @@ namespace StoryBlazeServer.Controllers
 
 
 
+
         }
+
+
+        [HttpGet("historiascategoria/{categoriaId}")]
+        [HttpGet("categorias/{categoriaId}")]
+        public async Task<IActionResult> GetHistoriasPorCategoria(int categoriaId)
+        {
+            try
+            {
+                // Verifica si el ID de la categoría es válido
+                if (categoriaId <= 0)
+                {
+                    return BadRequest(new { mensaje = "El ID de la categoría es inválido." });
+                }
+
+                // Ejecuta el procedimiento almacenado para obtener las historias
+                var historias = await _context.Historias
+                                              .FromSqlRaw("EXEC sp_HistoriasdeUnaCategoria @CategoriaID={0}", categoriaId)
+                                              .ToListAsync();
+
+                // Verifica si hay resultados
+                if (historias == null || historias.Count == 0)
+                {
+                    return NotFound(new { mensaje = "No se encontraron historias para esta categoría." });
+                }
+
+                return Ok(new Response<List<Historia>>
+                {
+                    IsSuccess = true,
+                    Data = historias
+                });
+            }
+            catch (SqlException sqlEx)
+            {
+                // Maneja errores específicos de SQL, como fallos en la conexión o problemas con la consulta
+                return StatusCode(500, new { mensaje = "Error en la base de datos. Por favor, inténtelo de nuevo más tarde.", detalle = sqlEx.Message });
+            }
+            catch (TimeoutException timeoutEx)
+            {
+                // Maneja problemas de tiempo de espera
+                return StatusCode(504, new { mensaje = "El servidor tardó demasiado en responder. Por favor, inténtelo más tarde.", detalle = timeoutEx.Message });
+            }
+            catch (Exception ex)
+            {
+                // Captura cualquier otro tipo de error
+                return StatusCode(500, new { mensaje = "Ocurrió un error inesperado. Por favor, contacte al administrador.", detalle = ex.Message });
+            }
+        }
+
+
     }
 
 

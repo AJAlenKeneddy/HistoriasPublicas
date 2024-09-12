@@ -18,14 +18,14 @@ public class HistoriaService
         _jwtService = jwtService;
     }
 
-    // Obtener todas las historias
+   
     public async Task<List<Historia>> GetHistoriasAsync()
     {
         var response = await _httpClient.GetFromJsonAsync<Response<List<Historia>>>("https://localhost:7184/api/Historias/ListarHistorias");
         return response?.IsSuccess == true ? response.Data : new List<Historia>();
     }
 
-    // Obtener una historia por su ID
+    
     public async Task<Historia> GetHistoriaByIdAsync(int id)
     {
         var response = await _httpClient.GetFromJsonAsync<Response<Historia>>($"https://localhost:7184/api/Historias/ObtenerHistoria/{id}");
@@ -34,34 +34,34 @@ public class HistoriaService
 
     public async Task<bool> AgregarHistoriaAsync(Historia nuevaHistoria)
     {
-        // Obtener el token desde localStorage
+        
         var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
 
         if (!string.IsNullOrEmpty(token))
         {
-            // Obtener el ID del usuario desde el token
+           
             var userId = _jwtService.GetUserIdFromToken(token);
 
             if (int.TryParse(userId, out int userIdInt))
             {
-                nuevaHistoria.UsuarioCreadorId = userIdInt; // Asignar el ID del usuario a la historia
-                nuevaHistoria.FechaCreacion = DateTime.Now; // Establecer la fecha de creación
+                nuevaHistoria.UsuarioCreadorId = userIdInt; 
+                nuevaHistoria.FechaCreacion = DateTime.Now; 
             }
         }
 
         // Crear el mensaje de solicitud
         var requestMessage = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7184/api/Historias/AgregarHistoria")
         {
-            Content = JsonContent.Create(nuevaHistoria) // Enviar el contenido JSON
+            Content = JsonContent.Create(nuevaHistoria) 
         };
 
-        // Agregar el encabezado de autorización
+        
         if (!string.IsNullOrEmpty(token))
         {
             requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        // Enviar la solicitud
+        
         var response = await _httpClient.SendAsync(requestMessage);
         var result = await response.Content.ReadFromJsonAsync<Response<object>>();
         return result?.IsSuccess == true;
@@ -69,31 +69,31 @@ public class HistoriaService
 
 
 
-    // Actualizar una historia existente
+    
     public async Task<bool> ActualizarHistoriaAsync(int id, Historia historiaActualizada)
     {
-        // Recuperar el token desde localStorage usando JS Interop
+       
         var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
 
-        // Crear un HttpRequestMessage para agregar el token en el encabezado de autorización
+       
         var request = new HttpRequestMessage(HttpMethod.Put, $"https://localhost:7184/api/Historias/ActualizarHistoria/{id}")
         {
             Content = JsonContent.Create(historiaActualizada)
         };
 
-        // Agregar el token de autorización en el encabezado
+        
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Enviar la solicitud
         var response = await _httpClient.SendAsync(request);
 
-        // Leer la respuesta y verificar si fue exitosa
+       
         var result = await response.Content.ReadFromJsonAsync<Response<object>>();
         return result?.IsSuccess == true;
     }
 
 
-    // Eliminar (lógicamente) una historia
+    
     public async Task<bool> EliminarHistoriaAsync(int id)
     {
         var response = await _httpClient.DeleteAsync($"https://localhost:7184/api/Historias/EliminarHistoria/{id}");
@@ -101,7 +101,7 @@ public class HistoriaService
         return result?.IsSuccess == true;
     }
 
-    // Restaurar una historia eliminada
+    
     public async Task<bool> RestaurarHistoriaAsync(int id)
     {
         var response = await _httpClient.PutAsJsonAsync($"https://localhost:7184/api/Historias/RestaurarHistoria/{id}", id);
@@ -109,10 +109,10 @@ public class HistoriaService
         return result?.IsSuccess == true;
     }
 
-    // Obtener historias del usuario autenticado
+    
     public async Task<List<Historia>> GetHistoriasByUserAsync()
     {
-        // Obtener el token desde localStorage
+        
         var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
 
         if (string.IsNullOrEmpty(token))
@@ -120,43 +120,91 @@ public class HistoriaService
             throw new UnauthorizedAccessException("No se encontró el token de autenticación.");
         }
 
-        // Agregar el token a los encabezados de la solicitud
+        
         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        // Hacer la solicitud al endpoint protegido
+        
         var response = await _httpClient.GetFromJsonAsync<Response<List<Historia>>>("https://localhost:7184/api/Historias/usuario/historias");
 
-        // Verificar la respuesta
+        
         Console.WriteLine("Response Status: " + response?.IsSuccess);
         Console.WriteLine("Response Data: " + response?.Data?.Count);
 
-        // Si la respuesta es exitosa, devolver los datos
+        
         return response?.IsSuccess == true ? response.Data : new List<Historia>();
     }
     public async Task<Historia?> ObtenerHistoriaCompletaAsync(int historiaId)
     {
-        // Obtener el token desde localStorage
+        
         var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
 
-        // Crear la solicitud HTTP
+        
         var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"https://localhost:7184/api/Historias/ObtenerHistoriaCompleta/{historiaId}");
 
-        // Agregar el encabezado de autorización
+        
         if (!string.IsNullOrEmpty(token))
         {
             requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        // Enviar la solicitud
+        
         var response = await _httpClient.SendAsync(requestMessage);
         if (response.IsSuccessStatusCode)
         {
-            // Deserializar la respuesta
+            
             var historiaCompleta = await response.Content.ReadFromJsonAsync<Historia>();
             return historiaCompleta;
         }
 
         return null;
     }
+    public async Task<List<Historia>> GetHistoriasPorCategoriaAsync(int categoriaId)
+    {
+        try
+        {
+            
+            if (categoriaId <= 0)
+            {
+                throw new ArgumentException("El ID de la categoría es inválido.");
+            }
+
+            
+            var response = await _httpClient.GetFromJsonAsync<Response<List<Historia>>>($"https://localhost:7184/api/Historias/historiascategoria/{categoriaId}");
+
+            
+            if (response != null && response.IsSuccess)
+            {
+                return response.Data;
+            }
+
+            
+            return new List<Historia>();
+        }
+        catch (HttpRequestException httpEx)
+        {
+            
+            Console.WriteLine($"Error en la solicitud HTTP: {httpEx.Message}");
+            return new List<Historia>(); 
+        }
+        catch (TimeoutException timeoutEx)
+        {
+            
+            Console.WriteLine($"La solicitud tardó demasiado: {timeoutEx.Message}");
+            return new List<Historia>();
+        }
+        catch (ArgumentException argEx)
+        {
+           
+            Console.WriteLine($"Error en los parámetros: {argEx.Message}");
+            return new List<Historia>();
+        }
+        catch (Exception ex)
+        {
+            
+            Console.WriteLine($"Ocurrió un error inesperado: {ex.Message}");
+            return new List<Historia>();
+        }
+    }
+
 
 }

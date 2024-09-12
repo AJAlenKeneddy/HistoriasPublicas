@@ -13,23 +13,27 @@
 
     <div class="form-group">
         <label for="titulo">Título</label>
-        <InputText id="titulo" class="form-control" Value="@Historia.Titulo" ValueChanged="(val) => Historia.Titulo = val" ValueExpression="() => Historia.Titulo" maxlength="30" />
+        <InputText id="titulo" class="form-control" @bind-Value="Historia.Titulo" maxlength="30" />
     </div>
 
     <div class="form-group">
         <label for="resumen">Resumen</label>
-        <InputTextArea id="resumen" class="form-control"
-                       Value="@Historia.Resumen"
-                       ValueChanged="(val) => Historia.Resumen = val"
-                       ValueExpression="() => Historia.Resumen"
-                       maxlength="40" />
+        <InputTextArea id="resumen" class="form-control" @bind-Value="Historia.Resumen" maxlength="40" />
     </div>
-
 
     <div class="form-group">
         <label for="estado">Estado</label>
-        <InputText id="estado" class="form-control" Value="@Historia.Estado" readonly="true" ValueChanged="(val) => Historia.Estado = val" ValueExpression="() => Historia.Estado" />
+        <InputText id="estado" class="form-control" @bind-Value="Historia.Estado" readonly="true" />
     </div>
+
+    <div class="form-group">
+        <label for="categoriaId">Categoria</label>
+        <InputNumber id="categoriaId" class="form-control"
+                     @bind-Value="Historia.CategoriaId"
+                     readonly="@(Historia.HistoriaId != 0)" />
+    </div>
+
+
     <br />
     <button type="submit" class="btn btn-primary">@((Historia.HistoriaId == 0) ? "Crear" : "Actualizar")</button>
 </EditForm>
@@ -45,7 +49,6 @@
         Historia.Estado = "En curso";
         if (id.HasValue)
         {
-           
             // Carga de datos de la historia para edición
             Historia = await historiaService.GetHistoriaByIdAsync(id.Value);
 
@@ -53,11 +56,6 @@
             {
                 // Manejo de errores si no se encuentra la historia
                 navigationManager.NavigateTo("/MisHistorias");
-            }
-            else
-            {
-                // Forzar renderizado para reflejar los datos en el formulario
-                StateHasChanged();
             }
         }
     }
