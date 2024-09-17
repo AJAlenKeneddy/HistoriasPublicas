@@ -69,31 +69,59 @@ public class HistoriaService
 
 
 
-    
+
     public async Task<bool> ActualizarHistoriaAsync(int id, Historia historiaActualizada)
     {
-       
-        var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
-
-       
-        var request = new HttpRequestMessage(HttpMethod.Put, $"https://localhost:7184/api/Historias/ActualizarHistoria/{id}")
+        try
         {
-            Content = JsonContent.Create(historiaActualizada)
-        };
+            // Obtener el token desde localStorage
+            var token = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
 
-        
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            // Crear la solicitud HTTP PUT
+            var request = new HttpRequestMessage(HttpMethod.Put, $"https://localhost:7184/api/Historias/ActualizarHistoria/{id}")
+            {
+                Content = JsonContent.Create(historiaActualizada)
+            };
 
-        // Enviar la solicitud
-        var response = await _httpClient.SendAsync(request);
+            // Agregar el token en los headers
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-       
-        var result = await response.Content.ReadFromJsonAsync<Response<object>>();
-        return result?.IsSuccess == true;
+            // Enviar la solicitud
+            var response = await _httpClient.SendAsync(request);
+
+            // Leer la respuesta y procesar el resultado
+            var result = await response.Content.ReadFromJsonAsync<Response<object>>();
+
+            if (response.IsSuccessStatusCode && result?.IsSuccess == true)
+            {
+                return true; // Historia actualizada exitosamente
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                Console.WriteLine("No tienes permisos para editar esta historia.");
+                return false; // No autorizado
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                Console.WriteLine("La historia no fue encontrada.");
+                return false; // Historia no encontrada o eliminada
+            }
+            else
+            {
+                Console.WriteLine($"Error: {result?.Message}");
+                return false; // Otros errores
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Excepción al actualizar la historia: {ex.Message}");
+            return false; // Error general
+        }
     }
 
 
-    
+
+
     public async Task<bool> EliminarHistoriaAsync(int id)
     {
         var response = await _httpClient.DeleteAsync($"https://localhost:7184/api/Historias/EliminarHistoria/{id}");

@@ -100,17 +100,33 @@ namespace StoryBlazeServer.Controllers
 
             try
             {
+                // Obtener el token del usuario actual
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var userIdFromToken = _jwtService.GetUserIdFromToken(token); // Usar el método que ya tienes implementado para decodificar el token
+
                 var historiaExistente = await _context.Historias.FindAsync(id);
 
                 if (historiaExistente == null || historiaExistente.Eliminado)
                     return NotFound(new { IsSuccess = false, Message = "Historia no encontrada o eliminada." });
 
-                // Actualiza las propiedades necesarias
-                historiaExistente.Titulo = historiaActualizada.Titulo;
-                historiaExistente.Resumen = historiaActualizada.Resumen;
+                
+                if (int.TryParse(userIdFromToken, out int userId))
+                {
+                    // Verificar si el usuario actual es el creador de la historia
+                    if (historiaExistente.UsuarioCreadorId == userId)
+                    {
+                        // Actualiza las propiedades necesarias
+                        historiaExistente.Titulo = historiaActualizada.Titulo;
+                        historiaExistente.Resumen = historiaActualizada.Resumen;
 
-                await _context.SaveChangesAsync();
-                return Ok(new { IsSuccess = true, Message = "Historia actualizada exitosamente." });
+                        await _context.SaveChangesAsync();
+                        return Ok(new { IsSuccess = true, Message = "Historia actualizada exitosamente." });
+                    }
+
+                    return StatusCode(StatusCodes.Status403Forbidden, new {IsSuccess= false,Message="Sin Permisos"});
+                }
+
+                return BadRequest(new { IsSuccess = false, Message = "El ID del usuario en el token es inválido." });
             }
             catch (Exception ex)
             {
@@ -122,6 +138,9 @@ namespace StoryBlazeServer.Controllers
                 });
             }
         }
+
+
+
 
         [HttpDelete("EliminarHistoria/{id}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
