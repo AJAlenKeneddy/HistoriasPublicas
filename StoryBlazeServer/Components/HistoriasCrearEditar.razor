@@ -5,6 +5,17 @@
 @inject NavigationManager navigationManager
 @using StoryBlazeServer.Models
 @using StoryBlazeServer.Components
+@inject NavigationManager NavigationManager
+
+@if (!string.IsNullOrEmpty(MensajeError))
+{
+    <div class="alert alert-danger">@MensajeError</div>
+}
+
+@if (!string.IsNullOrEmpty(MensajeExito))
+{
+    <div class="alert alert-success">@MensajeExito</div>
+}
 
 <h3>@(Historia.HistoriaId == 0 ? "Crear Historia" : "Editar Historia")</h3>
 <EditForm Model="Historia" OnValidSubmit="GuardarHistoria">
@@ -33,9 +44,9 @@
                      readonly="@(Historia.HistoriaId != 0)" />
     </div>
 
-
     <br />
     <button type="submit" class="btn btn-primary">@((Historia.HistoriaId == 0) ? "Crear" : "Actualizar")</button>
+    <button @onclick="GoBack" type="back" class="btn btn-success">Volver</button>
 </EditForm>
 
 @code {
@@ -43,18 +54,19 @@
     public int? id { get; set; }
 
     private Historia Historia { get; set; } = new Historia();
+    private string MensajeError { get; set; } = string.Empty;
+    private string MensajeExito { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         Historia.Estado = "En curso";
         if (id.HasValue)
         {
-            // Carga de datos de la historia para edición
             Historia = await historiaService.GetHistoriaByIdAsync(id.Value);
 
             if (Historia == null)
             {
-                // Manejo de errores si no se encuentra la historia
+                MensajeError = "La historia no fue encontrada.";
                 navigationManager.NavigateTo("/MisHistorias");
             }
         }
@@ -62,24 +74,31 @@
 
     private async Task GuardarHistoria()
     {
+        MensajeError = string.Empty;
+        MensajeExito = string.Empty;
         bool resultado;
 
-        if (Historia.HistoriaId == 0) // Crear nueva historia
+        if (Historia.HistoriaId == 0)
         {
             resultado = await historiaService.AgregarHistoriaAsync(Historia);
         }
-        else // Actualizar historia existente
+        else
         {
             resultado = await historiaService.ActualizarHistoriaAsync(Historia.HistoriaId, Historia);
         }
 
         if (resultado)
         {
-            navigationManager.NavigateTo("/MisHistorias");
+            MensajeExito = "Operación exitosa";
+
         }
         else
         {
-            // Mostrar error o manejar fallo
+            MensajeError = "Hubo un error al guardar la historia. Verifica los permisos o intenta nuevamente.";
         }
+    }
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("javascript:history.back()");
     }
 }

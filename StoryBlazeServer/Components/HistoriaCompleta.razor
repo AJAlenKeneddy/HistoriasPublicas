@@ -2,75 +2,42 @@
 @using StoryBlazeServer.Services
 @using StoryBlazeServer.Models
 @inject HistoriaService HistoriaService
-@inject NavigationManager Navigation
+@inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
-
-@code {
-    [Parameter]
-    public int HistoriaId { get; set; }
-
-    private Historia? historia;
-    private bool isInitialized;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !isInitialized)
-        {
-            isInitialized = true;
-
-            // Llama a JavaScript para obtener el token
-            var token = await JsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
-
-            // Si el token está disponible, carga la historia
-            if (!string.IsNullOrEmpty(token))
-            {
-                historia = await HistoriaService.ObtenerHistoriaCompletaAsync(HistoriaId);
-                if (historia == null)
-                {
-                    // Si la historia no se encuentra o hay un problema con el token
-                    Navigation.NavigateTo("/login"); // Redirige al login si el token es inválido
-                }
-                StateHasChanged(); // Llama a StateHasChanged para forzar el renderizado
-            }
-            else
-            {
-                // Si no hay token, redirigir a la página de inicio de sesión
-                Navigation.NavigateTo("/login");
-            }
-        }
-    }
-}
 
 @if (historia != null)
 {
-    <div style="margin-top: 20px; padding: 15px; border: 1px solid #000000; border-radius: 4px;">
+    <button @onclick="GoBack" type="button" class="btn btn-success">Volver</button>
+
+
+    <div class="mt-3 p-3 border rounded">
         <h2>@historia.Titulo</h2>
         <p><strong>Resumen:</strong> @historia.Resumen</p>
         <p><strong>Estado:</strong> @historia.Estado</p>
         <p><strong>Fecha de Creación:</strong> @historia.FechaCreacion.ToString()</p>
 
-        <hr style="border: 1px solid #0000;" />
+        <hr />
 
         <h3>Fragmentos</h3>
         @if (historia.Fragmentos.Any())
         {
             @foreach (var fragmento in historia.Fragmentos)
             {
-                <div style="margin-bottom: 20px; border: 1px solid #000000; border-radius: 4px; padding: 15px;">
-                    <h5 style="font-size: 1.25rem; margin-bottom: 0.75rem;">Fragmento #@fragmento.FragmentoId</h5>
+                <div class="mb-3 border rounded p-3">
+                    <h5 class="mb-2">Fragmento #@fragmento.FragmentoId</h5>
                     <p>@fragmento.Contenido</p>
-                    <p><small style="color: #6c757d;">Fecha de Creación: @fragmento.FechaCreacionFrag.ToString()</small></p>
-                    <p><small style="color: #6c757d;">Total Votos: @fragmento.TotalVotos</small></p>
+                    <p><small class="text-muted">Fecha de Creación: @fragmento.FechaCreacionFrag.ToString()</small></p>
+                    <p><small class="text-muted">Total Votos: @fragmento.TotalVotos</small></p>
 
                     <h6>Comentarios:</h6>
                     @if (fragmento.Comentarios.Any())
                     {
-                        <ul style="list-style-type: none; padding: 0;">
+                        <ul class="list-unstyled">
                             @foreach (var comentario in fragmento.Comentarios)
                             {
-                                <li style="border-bottom: 1px solid #000000; padding: 10px;">
+                                <li class="border-bottom p-2">
                                     <p>@comentario.Comentario1</p>
-                                    <small style="color: #6c757d;">Fecha: @comentario.FechaComentario.ToString()</small>
+                                    <small class="text-muted">Fecha: @comentario.FechaComentario.ToString()</small>
                                 </li>
                             }
                         </ul>
@@ -91,4 +58,40 @@
 else
 {
     <p>Cargando historia...</p>
+}
+
+@code {
+    [Parameter]
+    public int HistoriaId { get; set; }
+
+    private Historia? historia;
+    private bool isInitialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !isInitialized)
+        {
+            isInitialized = true;
+
+            var token = await JsRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                historia = await HistoriaService.ObtenerHistoriaCompletaAsync(HistoriaId);
+                if (historia == null)
+                {
+                    NavigationManager.NavigateTo("/login");
+                }
+                StateHasChanged();
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/login");
+            }
+        }
+    }
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("javascript:history.back()");
+    }
 }

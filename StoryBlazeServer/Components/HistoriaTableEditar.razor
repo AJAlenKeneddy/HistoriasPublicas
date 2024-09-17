@@ -1,6 +1,6 @@
 ﻿@using StoryBlazeServer.Models
 
-<table class="table ">
+<table class="table">
     <thead>
         <tr>
             <th>Título</th>
@@ -26,12 +26,12 @@
         {
             @foreach (var historia in Historias)
             {
-                <tr>
+                <tr @onclick="() => NavigateToHistoria(historia.HistoriaId)">
                     <td data-label="Título">@historia.Titulo</td>
                     <td data-label="Resumen">@historia.Resumen</td>
                     <td data-label="Estado">@historia.Estado</td>
                     <td>
-                        <button @onclick="() => EditarHistoria(historia.HistoriaId)" class="btn btn-light">
+                        <button @onclick:stopPropagation="true" @onclick="() => EditarHistoria(historia.HistoriaId)" class="btn btn-light">
                             Editar
                         </button>
                     </td>
@@ -39,10 +39,8 @@
             }
         }
     </tbody>
-    
-    
-
 </table>
+
 <div class="button-container">
     <button @onclick="CrearHistoria" class="btn btn-success">Crear Una Historia</button>
 </div>
@@ -58,8 +56,14 @@
     {
         NavigationManager.NavigateTo($"/historias/editar/{historiaId}");
     }
+
     private void CrearHistoria()
     {
         NavigationManager.NavigateTo($"/historias/crear");
+    }
+
+    private void NavigateToHistoria(int historiaId)
+    {
+        NavigationManager.NavigateTo($"/historia/{historiaId}");
     }
 }
