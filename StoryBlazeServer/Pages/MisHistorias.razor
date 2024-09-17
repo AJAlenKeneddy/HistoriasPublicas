@@ -7,6 +7,16 @@
 
 <div class="historias-section">
     <h3>Mis Historias</h3>
+
+    @if (!string.IsNullOrEmpty(MensajeError))
+    {
+        <div class="alert alert-danger">@MensajeError</div>
+    }
+    else if (!string.IsNullOrEmpty(MensajeExito))
+    {
+        <div class="alert alert-success">@MensajeExito</div>
+    }
+
     @if (historias == null)
     {
         <p>Cargando historias...</p>
@@ -23,6 +33,8 @@
 
 @code {
     private List<Historia>? historias;
+    private string MensajeError { get; set; } = string.Empty;
+    private string MensajeExito { get; set; } = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -30,23 +42,22 @@
         {
             try
             {
-                // Verificar el token antes de intentar cargar las historias
                 var token = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "authToken");
 
                 if (string.IsNullOrEmpty(token))
                 {
-                    // Si no hay token, redirigir al login
+                    MensajeError = "Debe iniciar sesión para ver sus historias.";
                     NavigationManager.NavigateTo("/login");
                     return;
                 }
 
-                // Si hay token, cargar las historias
                 historias = await HistoriaService.GetHistoriasByUserAsync();
-                StateHasChanged(); // Actualizar el estado del componente después de cargar las historias
+                MensajeExito = "Historias cargadas con éxito.";
+                StateHasChanged();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al cargar las historias: {ex.Message}");
+                MensajeError = $"Error al cargar las historias: {ex.Message}";
             }
         }
     }
