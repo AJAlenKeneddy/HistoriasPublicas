@@ -1,11 +1,10 @@
 ﻿@page "/historias/crear"
 @page "/historias/editar/{id:int}"
-
+@using StoryBlazeServer.Services
+@inject CategoriaService CategoriaService
 @inject HistoriaService historiaService
 @inject NavigationManager navigationManager
 @using StoryBlazeServer.Models
-@using StoryBlazeServer.Components
-@inject NavigationManager NavigationManager
 
 @if (!string.IsNullOrEmpty(MensajeError))
 {
@@ -34,19 +33,27 @@
 
     <div class="form-group">
         <label for="estado">Estado</label>
-        <InputText id="estado" class="form-control" @bind-Value="Historia.Estado" readonly="true" />
+        <select id="estado" disabled="@((Historia.HistoriaId==0) ? true : false )" @bind="Historia.Estado" class="form-select">
+            <option value="En Curso">En Curso</option>
+            <option value="Completada">Completada</option>
+        </select>
     </div>
 
     <div class="form-group">
-        <label for="categoriaId">Categoria</label>
-        <InputNumber id="categoriaId" class="form-control"
-                     @bind-Value="Historia.CategoriaId"
-                     readonly="@(Historia.HistoriaId != 0)" />
+        <label for="categoriaId">Categoría</label>
+        <select id="categoriaId" @bind="Historia.CategoriaId" class="form-select">
+            <option value="">Seleccione una categoría</option>
+            @foreach (var categoria in categorias)
+            {
+                <option value="@categoria.CategoriaId">@categoria.Nombre</option>
+            }
+        </select>
     </div>
 
     <br />
     <button type="submit" class="btn btn-primary">@((Historia.HistoriaId == 0) ? "Crear" : "Actualizar")</button>
-    <button @onclick="GoBack" type="back" class="btn btn-success">Volver</button>
+    
+    <button @onclick="GoBack" type="button" class="btn btn-success">Volver</button>
 </EditForm>
 
 @code {
@@ -56,10 +63,11 @@
     private Historia Historia { get; set; } = new Historia();
     private string MensajeError { get; set; } = string.Empty;
     private string MensajeExito { get; set; } = string.Empty;
+    private List<Categoria> categorias = new List<Categoria>();
 
     protected override async Task OnInitializedAsync()
     {
-        Historia.Estado = "En curso";
+        categorias = await CategoriaService.GetCategorias();
         if (id.HasValue)
         {
             Historia = await historiaService.GetHistoriaByIdAsync(id.Value);
@@ -67,8 +75,12 @@
             if (Historia == null)
             {
                 MensajeError = "La historia no fue encontrada.";
-                navigationManager.NavigateTo("/MisHistorias");
+                navigationManager.NavigateTo("/MisHistorias", true);
             }
+        }
+        else
+        {
+            Historia.Estado = "En Curso"; 
         }
     }
 
@@ -90,15 +102,16 @@
         if (resultado)
         {
             MensajeExito = "Operación exitosa";
-
+            navigationManager.NavigateTo("/MisHistorias", true);
         }
         else
         {
             MensajeError = "Hubo un error al guardar la historia. Verifica los permisos o intenta nuevamente.";
         }
     }
+
     private void GoBack()
     {
-        NavigationManager.NavigateTo("javascript:history.back()");
+        navigationManager.NavigateTo("/MisHistorias");
     }
 }

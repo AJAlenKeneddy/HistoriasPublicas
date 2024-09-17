@@ -118,6 +118,8 @@ namespace StoryBlazeServer.Controllers
                         // Actualiza las propiedades necesarias
                         historiaExistente.Titulo = historiaActualizada.Titulo;
                         historiaExistente.Resumen = historiaActualizada.Resumen;
+                        historiaExistente.Estado = historiaActualizada.Estado;
+                        historiaExistente.CategoriaId=historiaActualizada.CategoriaId;
 
                         await _context.SaveChangesAsync();
                         return Ok(new { IsSuccess = true, Message = "Historia actualizada exitosamente." });
